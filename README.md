@@ -5,32 +5,61 @@
 RaceDay is a web-based event management system for South African road
 running, walking and cycling events.
 
-This repository contains the planning and database work for Part 1 of
-the Programming 2B Portfolio of Evidence.
-
-## Part 1 Deliverables
-
-- Entity Relationship Diagram (ERD)
-- API Endpoint Plan
-- SQL Database Script
-- GitHub Actions CI/CD validation
-- Project documentation
+This repository contains the planning and database work completed for
+Part 1 of the Programming 2B Portfolio of Evidence.
 
 ## User Roles
 
 ### Organiser
-Organisers can create, edit and delete events, manage event categories,
-view event enrolments, capture participant results, and view information
-relating to the events they manage.
+
+Organisers can:
+
+- Create events
+- Edit events
+- Delete events
+- Manage event categories
+- View event enrolments
+- Capture participant results
+- View information relating to events they manage
 
 ### Participant
-Participants can create an account and log in, browse available events,
-enter events and select categories, view their enrolments, and track
-their race results and performance history.
+
+Participants can:
+
+- Create an account
+- Log in
+- Browse available events
+- Enter an event
+- Select a category
+- View their own enrolments
+- Track their race results and performance history
+
+## Part 1 Deliverables
+
+The following technical deliverables are included:
+
+- Entity Relationship Diagram (ERD)
+- API Endpoint Plan
+- SQL Server Database Script
+- GitHub Actions CI/CD validation
+- Database Design Specification
+- Project README documentation
 
 ## Repository Structure
 
 ```text
-docs/
-.github/
-└── workflows/
+RaceDay/
+│
+├── README.md
+│
+├── docs/
+│   ├── RaceDay_ERD.drawio
+│   ├── RaceDay_ERD.pdf
+│   ├── RaceDay_Database_Design.md
+│   ├── RaceDay_Database.sql
+│   ├── RaceDay_API_Endpoint_Plan.md
+│   └── RaceDay_API_Endpoint_Plan.pdf
+│
+└── .github/
+    └── workflows/
+        └── part1-ci.yml
