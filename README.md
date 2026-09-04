@@ -63,3 +63,17 @@ RaceDay/
 └── .github/
     └── workflows/
         └── part1-ci.yml
+
+
+
+
+## CI/CD
+
+
+GitHub Actions is used to check that the required Part 1 files are in the repository.
+
+### GitHub Actions Result
+
+The Part 1 validation workflow completed successfully.
+
+![GitHub Actions successful build](docs/github-actions-green.png)
