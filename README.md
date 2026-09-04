@@ -77,3 +77,10 @@ GitHub Actions is used to check that the required Part 1 files are in the reposi
 The Part 1 validation workflow completed successfully.
 
 ![GitHub Actions successful build](docs/github-actions-green.png)
+
+
+## Video Demonstration
+
+### Part 1 Presentation
+
+YouTube: [RaceDay PROG6212 Part 1 Presentation](https://youtu.be/gPA_AklaUbQ)
