@@ -1,0 +1,18 @@
+# Visual Studio temporary files
+.vs/
+
+# Compiled application files
+**/bin/
+**/obj/
+
+# Visual Studio user settings
+*.user
+*.suo
+*.csproj.user
+*.sln.docstates
+
+# Test output
+**/TestResults/
+
+# Temporary files
+*.tmp
