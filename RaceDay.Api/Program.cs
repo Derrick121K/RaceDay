@@ -61,3 +61,6 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+
+// Allows the automated test project to access the API entry point.
+public partial class Program { }
