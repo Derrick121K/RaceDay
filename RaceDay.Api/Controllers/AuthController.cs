@@ -28,10 +28,10 @@ public class AuthController : ControllerBase
         _passwordHasher = passwordHasher;
     }
 
-    /// <summary>
-    /// Registers a new RaceDay account.
-    /// The password is hashed before the account is saved.
-    /// </summary>
+    // Tell Swagger which responses registration can return.
+    [ProducesResponseType(StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
     [HttpPost("register")]
     public async Task<IActionResult> Register(RegisterRequest request)
     {
@@ -84,9 +84,10 @@ public class AuthController : ControllerBase
         });
     }
 
-    /// <summary>
-    /// Checks a user's credentials and starts a session when valid.
-    /// </summary>
+    // Document successful login and the possible validation failures.
+    [ProducesResponseType(typeof(AuthResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [HttpPost("login")]
     public async Task<ActionResult<AuthResponse>> Login(
         LoginRequest request)
@@ -153,9 +154,8 @@ public class AuthController : ControllerBase
         return Ok(response);
     }
 
-    /// <summary>
-    /// Ends the current session.
-    /// </summary>
+    // Logout clears the session and returns no response body.
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
     [HttpPost("logout")]
     public IActionResult Logout()
     {
