@@ -128,3 +128,36 @@ public sealed class CategoryRequest
     [Range(0, int.MaxValue)]
     public int? MaximumAge { get; set; }
 }
+
+/// <summary>
+/// Information a participant submits to enter an event.
+/// </summary>
+public sealed class EnrolmentRequest
+{
+    [Range(1, int.MaxValue)]
+    public int EventId { get; set; }
+
+    [Range(1, int.MaxValue)]
+    public int CategoryId { get; set; }
+}
+
+/// <summary>
+/// Status value used when an organiser updates an enrolment.
+/// </summary>
+public sealed class EnrolmentStatusRequest
+{
+    [Required]
+    [RegularExpression("^(ACTIVE|CANCELLED|COMPLETED)$")]
+    public string Status { get; set; } = "ACTIVE";
+}
+
+/// <summary>
+/// Finishing information recorded for an enrolment.
+/// </summary>
+public sealed class ResultRequest
+{
+    public TimeSpan FinishTime { get; set; }
+
+    [Range(1, int.MaxValue)]
+    public int FinishingPosition { get; set; }
+}
