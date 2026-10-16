@@ -247,4 +247,4 @@ Part 2 development branch:
 
 https://github.com/Derrick121K/RaceDay/tree/part2-api-development
 
-Submit the repository or branch link and the required Part 2 demonstration link using the assessment submission instructions.
+[Video link](https://youtu.be/Ky8FH73jlck)
