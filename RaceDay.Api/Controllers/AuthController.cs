@@ -1,4 +1,4 @@
-﻿
+﻿using RaceDay.Api.Security;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -153,6 +153,56 @@ public class AuthController : ControllerBase
 
         return Ok(response);
     }
+
+
+
+    /// <summary>
+    /// Returns the details of the user in the current session.
+    /// </summary>
+    [HttpGet("me")]
+    [SessionAuthorize]
+    [ProducesResponseType(typeof(AuthResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<AuthResponse>> GetCurrentUser()
+    {
+        // Read the user ID from the server-side session.
+        var userId = HttpContext.Session.GetInt32("UserId");
+
+        if (userId is null)
+        {
+            return Unauthorized(new
+            {
+                message = "Please log in to access this resource."
+            });
+        }
+
+        // Find that user's details in the database.
+        var user = await _dbContext.Users
+            .Where(account => account.UserID == userId.Value)
+            .Select(account => new AuthResponse
+            {
+                UserId = account.UserID,
+                FirstName = account.FirstName,
+                LastName = account.LastName,
+                Email = account.Email,
+                Role = account.Role
+            })
+            .SingleOrDefaultAsync();
+
+        // Reject a session if its user account no longer exists.
+        if (user is null)
+        {
+            HttpContext.Session.Clear();
+
+            return Unauthorized(new
+            {
+                message = "The session is no longer valid."
+            });
+        }
+
+        return Ok(user);
+    }
+
 
     // Logout clears the session and returns no response body.
     [ProducesResponseType(StatusCodes.Status204NoContent)]
