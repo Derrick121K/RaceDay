@@ -109,3 +109,22 @@ public sealed class EventRequest
     [Range(1, int.MaxValue)]
     public int EventTypeId { get; set; }
 }
+
+/// <summary>
+/// Holds the information needed to create or update an event category.
+/// </summary>
+public sealed class CategoryRequest
+{
+    [Required]
+    [StringLength(100)]
+    public string CategoryName { get; set; } = string.Empty;
+
+    [StringLength(200)]
+    public string? Description { get; set; }
+
+    [Range(0, int.MaxValue)]
+    public int? MinimumAge { get; set; }
+
+    [Range(0, int.MaxValue)]
+    public int? MaximumAge { get; set; }
+}
