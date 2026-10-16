@@ -81,3 +81,31 @@ public sealed class AuthResponse
     // The API must enforce permissions separately.
     public string Role { get; set; } = string.Empty;
 }
+
+
+
+/// <summary>
+/// Holds the details an organiser supplies when creating or updating an event.
+/// </summary>
+public sealed class EventRequest
+{
+    [Required]
+    [StringLength(150)]
+    public string EventName { get; set; } = string.Empty;
+
+    [Required]
+    [StringLength(500)]
+    public string Description { get; set; } = string.Empty;
+
+    public DateTime EventDate { get; set; }
+
+    [Required]
+    [StringLength(200)]
+    public string Location { get; set; } = string.Empty;
+
+    [Range(typeof(decimal), "0.01", "9999.99")]
+    public decimal Distance { get; set; }
+
+    [Range(1, int.MaxValue)]
+    public int EventTypeId { get; set; }
+}
