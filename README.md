@@ -231,11 +231,11 @@ The original database design, SQL script, ERD and API endpoint plan remain in th
 
 ## Video Demonstration
 
-**Part 2 demonstration:** Add the Unlisted YouTube link for the Part 2 demonstration before final submission.
+**Part 2 demonstration:** [Video link](https://youtu.be/Ky8FH73jlck).
 
-The existing Part 1 presentation is available here:
+The Part 1 presentation is available here:
 
-[RaceDay PROG6212 Part 1 Presentation](https://youtu.be/gPA_AklaUbQ)
+[Video link](https://youtu.be/Ky8FH73jlck)
 
 ## Repository and Submission
 
