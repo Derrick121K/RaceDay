@@ -233,7 +233,7 @@ The original database design, SQL script, ERD and API endpoint plan remain in th
 
 **Part 2 demonstration:** [Video link](https://youtu.be/Ky8FH73jlck).
 
-The Part 1 presentation is available here:
+The Part 2 presentation is available here:
 
 [Video link](https://youtu.be/Ky8FH73jlck)
 
