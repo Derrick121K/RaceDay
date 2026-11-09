@@ -1,0 +1,29 @@
+@model RegisterViewModel
+@{
+    ViewData["Title"] = "Create an account";
+}
+<section class="form-page">
+    <div class="form-intro">
+        <p class="eyebrow">A good day to start</p>
+        <h1>Create your participant account</h1>
+        <p>Use one account to keep your RaceDay profile and event activity together.</p>
+    </div>
+    <form asp-action="Register" method="post" class="form-card">
+        <div asp-validation-summary="ModelOnly" class="validation-summary" role="alert"></div>
+        <div class="field-grid">
+            <div><label asp-for="FirstName"></label><input asp-for="FirstName" autocomplete="given-name" /><span asp-validation-for="FirstName" class="field-error"></span></div>
+            <div><label asp-for="LastName"></label><input asp-for="LastName" autocomplete="family-name" /><span asp-validation-for="LastName" class="field-error"></span></div>
+        </div>
+        <label asp-for="Email"></label>
+        <input asp-for="Email" autocomplete="email" />
+        <span asp-validation-for="Email" class="field-error"></span>
+        <label asp-for="PhoneNumber">Phone number <span class="optional">(optional)</span></label>
+        <input asp-for="PhoneNumber" autocomplete="tel" />
+        <span asp-validation-for="PhoneNumber" class="field-error"></span>
+        <label asp-for="Password"></label>
+        <input asp-for="Password" type="password" autocomplete="new-password" />
+        <span asp-validation-for="Password" class="field-error"></span>
+        <button class="button button-primary button-wide" type="submit">Create participant account</button>
+        <p class="form-footnote">Already registered? <a asp-action="Login">Sign in</a>.</p>
+    </form>
+</section>

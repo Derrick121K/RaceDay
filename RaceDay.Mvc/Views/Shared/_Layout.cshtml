@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] · RaceDay</title>
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body>
+    <header class="site-header">
+        <a class="brand" asp-controller="Home" asp-action="Index" aria-label="RaceDay home">
+            <span class="brand-mark">R</span><span>RaceDay</span>
+        </a>
+        @await Component.InvokeAsync("MainNavigation")
+    </header>
+    <main class="page-shell">
+        @if (TempData["SuccessMessage"] is string successMessage)
+        {
+            <div class="notice notice-success" role="status">@successMessage</div>
+        }
+        @if (TempData["ErrorMessage"] is string errorMessage)
+        {
+            <div class="notice notice-error" role="alert">@errorMessage</div>
+        }
+        @RenderBody()
+    </main>
+    <footer class="site-footer"><span>RaceDay</span><span>Find your next finish line.</span></footer>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

@@ -1,0 +1,22 @@
+@model LoginViewModel
+@{
+    ViewData["Title"] = "Sign in";
+}
+<section class="form-page">
+    <div class="form-intro">
+        <p class="eyebrow">Welcome back</p>
+        <h1>Sign in to RaceDay</h1>
+        <p>Your account opens your profile and the tools available for your role.</p>
+    </div>
+    <form asp-action="Login" method="post" class="form-card">
+        <div asp-validation-summary="ModelOnly" class="validation-summary" role="alert"></div>
+        <label asp-for="Email"></label>
+        <input asp-for="Email" autocomplete="username" />
+        <span asp-validation-for="Email" class="field-error"></span>
+        <label asp-for="Password"></label>
+        <input asp-for="Password" type="password" autocomplete="current-password" />
+        <span asp-validation-for="Password" class="field-error"></span>
+        <button class="button button-primary button-wide" type="submit">Sign in</button>
+        <p class="form-footnote">New to RaceDay? <a asp-action="Register">Create a participant account</a>.</p>
+    </form>
+</section>

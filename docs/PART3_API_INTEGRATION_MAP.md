@@ -108,3 +108,46 @@ API endpoints.
   provisioning command is documented in the repository README. There is no
   public organiser-creation endpoint.
 - Event-banner and profile-image uploads remain incomplete.
+
+## MVC integration implemented in Sprint 2
+
+The MVC project is a server-rendered API client. It references
+`RaceDay.Contracts` for request/response types and contains no SQL Server,
+EF Core, or API database context registration.
+
+### MVC routes
+
+| Method and route | Access | Purpose / request fields | Result |
+|---|---|---|---|
+| `GET /` | Public | RaceDay landing page | Home page. |
+| `GET /Account/Login` | Public | None | Login form (`Email`, `Password`) with antiforgery token. |
+| `POST /Account/Login` | Public, antiforgery required | `LoginViewModel`: `Email`, `Password`; sends API `LoginRequest` to `POST /api/auth/login`. | On success redirects to dashboard and forwards API cookies; invalid credentials stay on the form with an error. |
+| `GET /Account/Register` | Public | None | Participant-only registration form; it has no role selector. |
+| `POST /Account/Register` | Public, antiforgery required | `RegisterViewModel`: `FirstName`, `LastName`, `Email`, `Password`, optional `PhoneNumber`; MVC always supplies `role=PARTICIPANT` to the API. | On success redirects to login; API validation/connection errors are shown on the form. |
+| `POST /Account/Logout` | Antiforgery required | None; calls `POST /api/auth/logout` with the current API session cookie. | Redirects to login and expires `.RaceDay.Session` in the browser. |
+| `GET /Dashboard` | API session required | Calls `GET /api/users/me`. | Participant- or organiser-specific dashboard and navigation. A missing/expired session redirects to login. |
+| `GET /Profile` | API session required | Calls `GET /api/users/me`. | Safe profile details for the signed-in user. |
+
+### API client and cookies
+
+- `Api:BaseUrl` in `RaceDay.Mvc/appsettings.json` configures the API origin.
+  Set `Api__BaseUrl` to override it through environment configuration.
+- `RaceDayApiClient` uses a typed `IHttpClientFactory` client for the actual API
+  routes and DTOs listed above.
+- `ApiSessionCookieHandler` forwards only the current request's
+  `.RaceDay.Session` cookie. Its `HttpClientHandler` has `UseCookies=false`, so
+  no shared `CookieContainer` can mix users' sessions.
+- API `Set-Cookie` headers are copied to the browser as received, preserving
+  their attributes. Logout also expires the browser's API session cookie if the
+  API response did not include a clearing cookie.
+- Session cookies stay HttpOnly and are not written to logs or made available
+  to JavaScript. MVC unsafe form submissions use ASP.NET Core antiforgery
+  validation.
+- The MVC UI maps API 401 responses to an expired-session sign-in redirect,
+  403 to an access-denied page, and connection/timeout failures to a
+  service-unavailable page or form error.
+
+The initial MVC sprint includes login, logout, participant registration,
+profile retrieval and role-aware navigation. Event, category, enrolment, and
+results screens are not implemented in MVC yet; the API endpoints above remain
+available for later integration.

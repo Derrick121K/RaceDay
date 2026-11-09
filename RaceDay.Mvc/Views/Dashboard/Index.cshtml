@@ -1,0 +1,17 @@
+@model UserProfileResponse
+@{
+    ViewData["Title"] = "Dashboard";
+    var isOrganiser = Model.Role == "ORGANISER";
+}
+<section class="dashboard-hero">
+    <p class="eyebrow">@(isOrganiser ? "Organiser workspace" : "Your RaceDay")</p>
+    <h1>@(isOrganiser ? $"Welcome, {Model.FirstName}." : $"Ready for your next race, {Model.FirstName}?")</h1>
+    <p>@(isOrganiser
+        ? "Your organiser session is active. Event management screens will connect to the existing RaceDay API in the next sprint."
+        : "Your participant account is ready. Profile details are available here; event and results pages will follow.")</p>
+    <a class="button button-primary" asp-controller="Profile" asp-action="Index">View my profile</a>
+</section>
+<section class="dashboard-card">
+    <div><span class="card-kicker">Signed in as</span><h2>@Model.FirstName @Model.LastName</h2><p>@Model.Email</p></div>
+    <span class="role-pill">@Model.Role</span>
+</section>

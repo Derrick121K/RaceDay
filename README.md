@@ -1,11 +1,11 @@
 
 # RaceDay Event Management System
 
-## PROG6212 Programming 2B — PoE Part 2
+## PROG6212 Programming 2B — RaceDay API and MVC
 
 RaceDay is a web-based event management API for South African road running, walking and cycling events. It supports account registration, session-based authentication, event management, event categories, participant enrolments and race results.
 
-This repository extends the planning and database work from Part 1 with an ASP.NET Core Web API and an automated build-and-test workflow.
+This repository extends the planning and database work from Part 1 with an ASP.NET Core Web API and an ASP.NET Core MVC client. The MVC application calls the API over HTTP and does not access SQL Server directly.
 
 ## Technology Stack
 
@@ -39,6 +39,12 @@ RaceDay/
 │   ├── AuthControllerTests.cs
 │   ├── RaceDayWebApplicationFactory.cs
 │   └── UnitTest1.cs
+├── RaceDay.Mvc/
+│   ├── Controllers/
+│   ├── Services/
+│   ├── Views/
+│   └── Program.cs
+├── RaceDay.Mvc.Tests/
 ├── RaceDay.Contracts/
 │   └── Dtos.cs
 ├── docs/
@@ -57,12 +63,12 @@ Install the following before running the application:
 
 ## Getting Started
 
-Clone the repository and check out the Part 2 branch:
+Clone the repository and check out the Part 3 development branch:
 
 ```bash
 git clone https://github.com/Derrick121K/RaceDay.git
 cd RaceDay
-git checkout part2-api-development
+git checkout part3-mvc-development
 ```
 
 Open `RaceDay.slnx` in Visual Studio.
@@ -102,6 +108,34 @@ For example, during local development:
 `https://localhost:7155/swagger/index.html`
 
 Your port may differ depending on the launch profile.
+
+### Run the MVC application
+
+Apply the API database migration before starting the applications. Then run
+the API and MVC app in separate terminals from the repository root.
+
+Terminal 1 — API:
+
+```powershell
+dotnet run --project RaceDay.Api/RaceDay.Api.csproj --launch-profile https
+```
+
+Terminal 2 — MVC:
+
+```powershell
+$env:Api__BaseUrl = "https://localhost:7155/"
+dotnet run --project RaceDay.Mvc/RaceDay.Mvc.csproj --launch-profile https
+```
+
+Open `https://localhost:7180`. The API base URL defaults to
+`https://localhost:7155/` in `RaceDay.Mvc/appsettings.json`; use `Api__BaseUrl`
+when the API runs elsewhere. If the local HTTPS development certificate is not
+trusted, run `dotnet dev-certs https --trust` once for the current user.
+
+The MVC app forwards the API's HttpOnly session cookie per browser request. It
+does not maintain a shared cookie container or create a separate MVC login
+session. See [docs/PART3_API_INTEGRATION_MAP.md](docs/PART3_API_INTEGRATION_MAP.md)
+for the route and cookie contract.
 
 ## Authentication and Session Management
 
@@ -204,12 +238,13 @@ The test project uses xUnit, ASP.NET Core's test host and Entity Framework Core'
 
 The test factory replaces the normal SQL Server registration with a separate in-memory database for API tests.
 
-Run the tests from the repository root:
+Run restore, Release build, the API tests and the MVC tests from the repository root:
 
 ```bash
-dotnet restore RaceDay.Api.Tests/RaceDay.Api.Tests.csproj
-dotnet build RaceDay.Api.Tests/RaceDay.Api.Tests.csproj --configuration Release
+dotnet restore RaceDay.slnx
+dotnet build RaceDay.slnx --configuration Release
 dotnet test RaceDay.Api.Tests/RaceDay.Api.Tests.csproj --configuration Release
+dotnet test RaceDay.Mvc.Tests/RaceDay.Mvc.Tests.csproj --configuration Release
 ```
 
 The automated tests currently cover:
@@ -221,12 +256,17 @@ The automated tests currently cover:
 - Successful login returning user details
 - Rejection of an incorrect password with `401 Unauthorized`
 - Logout returning `204 No Content`
+- Profile retrieval and updates, including role modification resistance
+- Participant result fields and ownership isolation
+- Participant and organiser ownership for enrolment detail
+- MVC authentication, antiforgery, API cookie forwarding/clearing and per-user session isolation
+- MVC login errors, API failures, expired sessions, forbidden access and role-aware navigation
 
 These tests do not constitute complete automated coverage of every event, category, enrolment and result endpoint. Those operations should be verified with additional endpoint-specific tests.
 
 ## Continuous Integration
 
-The Part 2 workflow is located at:
+The existing Part 2 API workflow is located at:
 
 `.github/workflows/part2-ci.yml`
 

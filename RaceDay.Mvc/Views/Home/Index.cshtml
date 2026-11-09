@@ -1,0 +1,25 @@
+@{
+    ViewData["Title"] = "Run together";
+}
+<section class="hero">
+    <div class="hero-copy">
+        <p class="eyebrow">Move with purpose</p>
+        <h1>Your next finish line starts here.</h1>
+        <p class="hero-lede">Discover local running, walking and cycling events, then keep your race details together in one place.</p>
+        <div class="button-row">
+            <a class="button button-primary" asp-controller="Account" asp-action="Register">Create participant account</a>
+            <a class="button button-secondary" asp-controller="Account" asp-action="Login">Sign in</a>
+        </div>
+    </div>
+    <div class="hero-card" aria-label="RaceDay event snapshot">
+        <div class="sunrise"></div>
+        <span class="card-kicker">Race day, your way</span>
+        <span class="route-line"></span>
+        <div class="route-label"><strong>Start</strong><strong>Finish</strong></div>
+    </div>
+</section>
+<section class="feature-row" aria-label="RaceDay features">
+    <article><span class="feature-number">01</span><h2>Find an event</h2><p>Browse race details and categories in the RaceDay catalogue.</p></article>
+    <article><span class="feature-number">02</span><h2>Make it yours</h2><p>Keep your profile and participant account details up to date.</p></article>
+    <article><span class="feature-number">03</span><h2>Track your progress</h2><p>View your event history and results as the service grows.</p></article>
+</section>

@@ -1,0 +1,11 @@
+@model string?
+@{
+    ViewData["Title"] = "RaceDay unavailable";
+    var message = Model ?? "The RaceDay API is unavailable. Check that the API is running, then try again.";
+}
+<section class="message-card">
+    <p class="eyebrow">Connection issue</p>
+    <h1>We couldn't reach RaceDay.</h1>
+    <p>@message</p>
+    <a class="button button-secondary" asp-controller="Home" asp-action="Index">Return home</a>
+</section>

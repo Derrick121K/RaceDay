@@ -1,0 +1,20 @@
+@model UserProfileResponse?
+<nav class="main-nav" aria-label="Main navigation">
+    <a asp-controller="Home" asp-action="Index">Home</a>
+    @if (Model is not null)
+    {
+        <a asp-controller="Dashboard" asp-action="Index">
+            @(Model.Role == "ORGANISER" ? "Organiser dashboard" : "Participant dashboard")
+        </a>
+        <a asp-controller="Profile" asp-action="Index">My profile</a>
+        <span class="role-pill">@Model.Role</span>
+        <form asp-controller="Account" asp-action="Logout" method="post" class="nav-form">
+            <button type="submit" class="nav-button">Sign out</button>
+        </form>
+    }
+    else
+    {
+        <a asp-controller="Account" asp-action="Login">Sign in</a>
+        <a class="nav-cta" asp-controller="Account" asp-action="Register">Join RaceDay</a>
+    }
+</nav>

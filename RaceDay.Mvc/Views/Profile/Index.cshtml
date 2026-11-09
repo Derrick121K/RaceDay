@@ -1,0 +1,21 @@
+@model UserProfileResponse
+@{
+    ViewData["Title"] = "My profile";
+}
+<section class="content-heading">
+    <p class="eyebrow">Account details</p>
+    <h1>My profile</h1>
+    <p>Your profile is loaded from the RaceDay API for the currently signed-in account.</p>
+</section>
+<section class="profile-card">
+    <div class="profile-avatar" aria-hidden="true">@Model.FirstName.FirstOrDefault()@Model.LastName.FirstOrDefault()</div>
+    <div class="profile-details">
+        <h2>@Model.FirstName @Model.LastName</h2>
+        <dl>
+            <div><dt>Email</dt><dd>@Model.Email</dd></div>
+            <div><dt>Phone</dt><dd>@(string.IsNullOrWhiteSpace(Model.PhoneNumber) ? "Not provided" : Model.PhoneNumber)</dd></div>
+            <div><dt>Account type</dt><dd>@Model.Role</dd></div>
+            <div><dt>Member since</dt><dd>@Model.CreatedAt.ToString("d MMM yyyy")</dd></div>
+        </dl>
+    </div>
+</section>
