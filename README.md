@@ -372,9 +372,8 @@ https://github.com/Derrick121K/RaceDay/tree/part2-api-development
 
 ## Part 3 Video Demonstration
 
-Add the unlisted YouTube Part 3 demonstration URL here after recording.
-The demonstration should show the organiser and participant workflows,
-image upload, Docker deployment, repository and successful CI run.
+[Watch the RaceDay Part 3 Demonstration](https://youtu.be/iYQyMFtDrxg)
+
 
 ## Part 3 Repository
 
