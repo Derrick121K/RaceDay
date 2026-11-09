@@ -1,8 +1,10 @@
 ﻿using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Logging;
 using RaceDay.Api.Data;
 
 namespace RaceDay.Api.Tests;
@@ -11,8 +13,19 @@ public class RaceDayWebApplicationFactory : WebApplicationFactory<Program>
 {
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
+        builder.ConfigureLogging(logging =>
+        {
+            // TestServer has no Windows Event Log target; keep test diagnostics on the console.
+            logging.ClearProviders();
+            logging.AddConsole();
+        });
+
         builder.ConfigureServices(services =>
         {
+            // Avoid reading or writing machine-level keys in the test host.
+            services.AddDataProtection()
+                .UseEphemeralDataProtectionProvider();
+
             // Remove the normal database registrations used by the API.
             services.RemoveAll<RaceDayDbContext>();
             services.RemoveAll<DbContextOptions<RaceDayDbContext>>();

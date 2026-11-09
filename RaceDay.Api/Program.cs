@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using RaceDay.Api.Data;
 using Microsoft.AspNetCore.Identity;
 using RaceDay.Api.Models;
+using RaceDay.Api.Development;
 
 
 
@@ -43,6 +44,20 @@ builder.Services.AddDbContext<RaceDayDbContext>(options =>
 
 
 var app = builder.Build();
+
+if (args.Contains("--provision-organiser", StringComparer.Ordinal))
+{
+    if (!app.Environment.IsDevelopment())
+    {
+        Console.Error.WriteLine(
+            "Organiser provisioning is available only in the Development environment.");
+        Environment.ExitCode = 1;
+        return;
+    }
+
+    await DevelopmentOrganiserProvisioner.RunAsync(app.Services);
+    return;
+}
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

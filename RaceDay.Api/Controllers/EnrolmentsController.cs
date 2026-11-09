@@ -19,6 +19,70 @@ public class EnrolmentsController : ControllerBase
         _db = db;
     }
 
+    // Participants can inspect their own enrolment; organisers can inspect
+    // enrolments for events they manage.
+    [HttpGet("{id:int}")]
+    [SessionAuthorize("PARTICIPANT", "ORGANISER")]
+    [ProducesResponseType(typeof(EnrolmentDetailResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<EnrolmentDetailResponse>> GetEnrolment(int id)
+    {
+        var userId = HttpContext.Session.GetInt32("UserId");
+        var role = HttpContext.Session.GetString("Role");
+
+        if (userId is null || role is null)
+            return Unauthorized();
+
+        var enrolment = await _db.Enrolments
+            .AsNoTracking()
+            .Where(e => e.EnrolmentID == id)
+            .Select(e => new
+            {
+                e.EnrolmentID,
+                e.ParticipantID,
+                e.EventID,
+                EventName = e.Event!.EventName,
+                e.CategoryID,
+                CategoryName = e.Category!.CategoryName,
+                e.EnrolmentDate,
+                e.Status
+            })
+            .SingleOrDefaultAsync();
+
+        if (enrolment is null)
+            return NotFound();
+
+        if (role.Equals("PARTICIPANT", StringComparison.OrdinalIgnoreCase) &&
+            enrolment.ParticipantID != userId.Value)
+        {
+            return StatusCode(StatusCodes.Status403Forbidden);
+        }
+
+        if (role.Equals("ORGANISER", StringComparison.OrdinalIgnoreCase))
+        {
+            var managesEvent = await _db.Events.AnyAsync(e =>
+                e.EventID == enrolment.EventID &&
+                e.OrganiserID == userId.Value);
+
+            if (!managesEvent)
+                return StatusCode(StatusCodes.Status403Forbidden);
+        }
+
+        return Ok(new EnrolmentDetailResponse
+        {
+            EnrolmentId = enrolment.EnrolmentID,
+            ParticipantId = enrolment.ParticipantID,
+            EventId = enrolment.EventID,
+            EventName = enrolment.EventName,
+            CategoryId = enrolment.CategoryID,
+            CategoryName = enrolment.CategoryName,
+            EnrolmentDate = enrolment.EnrolmentDate,
+            Status = enrolment.Status
+        });
+    }
+
     // Participants can view only their own enrolments.
     [HttpGet("me")]
     [SessionAuthorize("PARTICIPANT")]
@@ -124,7 +188,7 @@ public class EnrolmentsController : ControllerBase
             return NotFound();
 
         if (raceEvent.OrganiserID != organiserId.Value)
-            return Forbid();
+            return StatusCode(StatusCodes.Status403Forbidden);
 
         var enrolments = await _db.Enrolments
             .AsNoTracking()
@@ -166,7 +230,7 @@ public class EnrolmentsController : ControllerBase
             return NotFound();
 
         if (raceEvent.OrganiserID != organiserId.Value)
-            return Forbid();
+            return StatusCode(StatusCodes.Status403Forbidden);
 
         enrolment.Status = request.Status.Trim().ToUpperInvariant();
 

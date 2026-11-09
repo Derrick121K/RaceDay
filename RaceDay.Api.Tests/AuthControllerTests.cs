@@ -64,6 +64,36 @@ public class AuthControllerTests : IClassFixture<RaceDayWebApplicationFactory>
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
     }
 
+    [Fact]
+    public async Task Register_AsOrganiser_ReturnsForbidden()
+    {
+        var request = new
+        {
+            firstName = "Untrusted",
+            lastName = "Organiser",
+            email = $"organiser-{Guid.NewGuid():N}@example.com",
+            password = "RaceDayTest2026!",
+            role = "ORGANISER",
+            phoneNumber = (string?)null
+        };
+
+        var response = await _client.PostAsJsonAsync(
+            "/api/auth/register",
+            request);
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+
+        var loginResponse = await _client.PostAsJsonAsync(
+            "/api/auth/login",
+            new
+            {
+                email = request.email,
+                password = request.password
+            });
+
+        Assert.Equal(HttpStatusCode.Unauthorized, loginResponse.StatusCode);
+    }
+
 
     [Fact]
     public async Task Register_TwiceWithSameEmail_ReturnsConflictOnSecondRequest()

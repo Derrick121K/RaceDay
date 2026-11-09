@@ -127,6 +127,23 @@ Participants can register, log in, browse events, enrol in events, view their ow
 
 The API checks the session identity and role for protected operations. Organiser event-management actions also check ownership of the relevant event.
 
+### Create a Development Organiser
+
+Public registration creates participant accounts only. To create a local
+organiser for development or a demo, apply the database migrations, then run
+the API interactively in the Development environment:
+
+```powershell
+$env:ASPNETCORE_ENVIRONMENT = "Development"
+dotnet run --project RaceDay.Api/RaceDay.Api.csproj -- --provision-organiser
+```
+
+The command prompts for the organiser's email and name, then reads the password
+without echoing it and asks for confirmation. It hashes the password with the
+ASP.NET Core password hasher before saving the account. It refuses duplicate
+emails and is unavailable outside the Development environment. Do not put the
+password in command arguments, source control, or a committed settings file.
+
 ## API Endpoint Reference
 
 All request and response schemas can also be inspected in Swagger while the API is running.

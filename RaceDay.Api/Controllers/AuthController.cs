@@ -31,10 +31,21 @@ public class AuthController : ControllerBase
     // Tell Swagger which responses registration can return.
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     [HttpPost("register")]
     public async Task<IActionResult> Register(RegisterRequest request)
     {
+        // Public registration must never grant organiser privileges.
+        // Organiser accounts need to be provisioned through a trusted process.
+        if (!string.Equals(
+                request.Role.Trim(),
+                "PARTICIPANT",
+                StringComparison.OrdinalIgnoreCase))
+        {
+            return StatusCode(StatusCodes.Status403Forbidden);
+        }
+
         // Store email addresses in a consistent format so that
         // the same email cannot be registered using different casing.
         var email = request.Email.Trim().ToLowerInvariant();
@@ -57,7 +68,7 @@ public class AuthController : ControllerBase
             FirstName = request.FirstName.Trim(),
             LastName = request.LastName.Trim(),
             Email = email,
-            Role = request.Role.Trim().ToUpperInvariant(),
+            Role = "PARTICIPANT",
 
             // Phone numbers are optional, so save null when none is supplied.
             PhoneNumber = string.IsNullOrWhiteSpace(request.PhoneNumber)
@@ -160,10 +171,11 @@ public class AuthController : ControllerBase
     /// Returns the details of the user in the current session.
     /// </summary>
     [HttpGet("me")]
+    [HttpGet("~/api/users/me")]
     [SessionAuthorize]
-    [ProducesResponseType(typeof(AuthResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(UserProfileResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<ActionResult<AuthResponse>> GetCurrentUser()
+    public async Task<ActionResult<UserProfileResponse>> GetCurrentUser()
     {
         // Read the user ID from the server-side session.
         var userId = HttpContext.Session.GetInt32("UserId");
@@ -179,13 +191,15 @@ public class AuthController : ControllerBase
         // Find that user's details in the database.
         var user = await _dbContext.Users
             .Where(account => account.UserID == userId.Value)
-            .Select(account => new AuthResponse
+            .Select(account => new UserProfileResponse
             {
                 UserId = account.UserID,
                 FirstName = account.FirstName,
                 LastName = account.LastName,
                 Email = account.Email,
-                Role = account.Role
+                PhoneNumber = account.PhoneNumber,
+                Role = account.Role,
+                CreatedAt = account.CreatedAt
             })
             .SingleOrDefaultAsync();
 
@@ -201,6 +215,60 @@ public class AuthController : ControllerBase
         }
 
         return Ok(user);
+    }
+
+    /// <summary>
+    /// Updates editable fields on the current user's profile.
+    /// </summary>
+    [HttpPut("me")]
+    [HttpPut("~/api/users/me")]
+    [SessionAuthorize]
+    [ProducesResponseType(typeof(UserProfileResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<UserProfileResponse>> UpdateCurrentUser(
+        UserProfileUpdateRequest request)
+    {
+        var userId = HttpContext.Session.GetInt32("UserId");
+
+        if (userId is null)
+        {
+            return Unauthorized(new
+            {
+                message = "Please log in to access this resource."
+            });
+        }
+
+        var user = await _dbContext.Users
+            .SingleOrDefaultAsync(account => account.UserID == userId.Value);
+
+        if (user is null)
+        {
+            HttpContext.Session.Clear();
+            return Unauthorized(new
+            {
+                message = "The session is no longer valid."
+            });
+        }
+
+        user.FirstName = request.FirstName.Trim();
+        user.LastName = request.LastName.Trim();
+        user.PhoneNumber = string.IsNullOrWhiteSpace(request.PhoneNumber)
+            ? null
+            : request.PhoneNumber.Trim();
+
+        await _dbContext.SaveChangesAsync();
+
+        return Ok(new UserProfileResponse
+        {
+            UserId = user.UserID,
+            FirstName = user.FirstName,
+            LastName = user.LastName,
+            Email = user.Email,
+            PhoneNumber = user.PhoneNumber,
+            Role = user.Role,
+            CreatedAt = user.CreatedAt
+        });
     }
 
 

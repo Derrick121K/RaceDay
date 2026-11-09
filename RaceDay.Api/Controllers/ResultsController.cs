@@ -22,7 +22,12 @@ public class ResultsController : ControllerBase
     // Participants can view only their own results.
     [HttpGet("results/me")]
     [SessionAuthorize("PARTICIPANT")]
-    public async Task<IActionResult> GetMyResults()
+    [ProducesResponseType(
+        typeof(IReadOnlyList<ParticipantResultResponse>),
+        StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<IReadOnlyList<ParticipantResultResponse>>>
+        GetMyResults()
     {
         var participantId = HttpContext.Session.GetInt32("UserId");
 
@@ -31,17 +36,17 @@ public class ResultsController : ControllerBase
 
         var results = await _db.Results
             .AsNoTracking()
-            .Where(r => _db.Enrolments.Any(e =>
-                e.EnrolmentID == r.EnrolmentID &&
-                e.ParticipantID == participantId.Value))
+            .Where(r => r.Enrolment!.ParticipantID == participantId.Value)
             .OrderBy(r => r.FinishingPosition)
-            .Select(r => new
+            .Select(r => new ParticipantResultResponse
             {
-                r.ResultID,
-                r.EnrolmentID,
-                r.FinishTime,
-                r.FinishingPosition,
-                r.RecordedAt
+                ResultId = r.ResultID,
+                EnrolmentId = r.EnrolmentID,
+                EventName = r.Enrolment!.Event!.EventName,
+                EventDate = r.Enrolment.Event!.EventDate,
+                CategoryName = r.Enrolment.Category!.CategoryName,
+                FinishTime = r.FinishTime,
+                FinishingPosition = r.FinishingPosition
             })
             .ToListAsync();
 
@@ -70,7 +75,7 @@ public class ResultsController : ControllerBase
         if (role == "PARTICIPANT" &&
             enrolment.ParticipantID != userId.Value)
         {
-            return Forbid();
+            return StatusCode(StatusCodes.Status403Forbidden);
         }
 
         if (role == "ORGANISER")
@@ -80,7 +85,7 @@ public class ResultsController : ControllerBase
                 e.OrganiserID == userId.Value);
 
             if (!ownsEvent)
-                return Forbid();
+                return StatusCode(StatusCodes.Status403Forbidden);
         }
 
         var result = await _db.Results
@@ -130,7 +135,7 @@ public class ResultsController : ControllerBase
             e.OrganiserID == organiserId.Value);
 
         if (!ownsEvent)
-            return Forbid();
+            return StatusCode(StatusCodes.Status403Forbidden);
 
         var alreadyHasResult = await _db.Results
             .AnyAsync(r => r.EnrolmentID == enrolmentId);
@@ -197,7 +202,7 @@ public class ResultsController : ControllerBase
             e.OrganiserID == organiserId.Value);
 
         if (!ownsEvent)
-            return Forbid();
+            return StatusCode(StatusCodes.Status403Forbidden);
 
         var result = await _db.Results
             .SingleOrDefaultAsync(r => r.EnrolmentID == enrolmentId);
@@ -242,7 +247,7 @@ public class ResultsController : ControllerBase
             e.OrganiserID == organiserId.Value);
 
         if (!ownsEvent)
-            return Forbid();
+            return StatusCode(StatusCodes.Status403Forbidden);
 
         var result = await _db.Results
             .SingleOrDefaultAsync(r => r.EnrolmentID == enrolmentId);

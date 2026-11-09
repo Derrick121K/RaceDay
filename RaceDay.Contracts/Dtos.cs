@@ -82,6 +82,67 @@ public sealed class AuthResponse
     public string Role { get; set; } = string.Empty;
 }
 
+/// <summary>
+/// Safe profile data returned for the signed-in account.
+/// </summary>
+public sealed class UserProfileResponse
+{
+    public int UserId { get; set; }
+    public string FirstName { get; set; } = string.Empty;
+    public string LastName { get; set; } = string.Empty;
+    public string Email { get; set; } = string.Empty;
+    public string? PhoneNumber { get; set; }
+    public string Role { get; set; } = string.Empty;
+    public DateTime CreatedAt { get; set; }
+}
+
+/// <summary>
+/// Editable profile fields. Account identity, role and credentials are excluded.
+/// </summary>
+public sealed class UserProfileUpdateRequest
+{
+    [Required]
+    [StringLength(50)]
+    public string FirstName { get; set; } = string.Empty;
+
+    [Required]
+    [StringLength(50)]
+    public string LastName { get; set; } = string.Empty;
+
+    [Phone]
+    [StringLength(20)]
+    public string? PhoneNumber { get; set; }
+}
+
+/// <summary>
+/// Event and category details shown with a participant's result.
+/// </summary>
+public sealed class ParticipantResultResponse
+{
+    public int ResultId { get; set; }
+    public int EnrolmentId { get; set; }
+    public string EventName { get; set; } = string.Empty;
+    public DateTime EventDate { get; set; }
+    public string CategoryName { get; set; } = string.Empty;
+    public TimeSpan FinishTime { get; set; }
+    public int FinishingPosition { get; set; }
+}
+
+/// <summary>
+/// Safe details for an enrolment visible to its participant or event organiser.
+/// </summary>
+public sealed class EnrolmentDetailResponse
+{
+    public int EnrolmentId { get; set; }
+    public int ParticipantId { get; set; }
+    public int EventId { get; set; }
+    public string EventName { get; set; } = string.Empty;
+    public int CategoryId { get; set; }
+    public string CategoryName { get; set; } = string.Empty;
+    public DateTime EnrolmentDate { get; set; }
+    public string Status { get; set; } = string.Empty;
+}
+
 
 
 /// <summary>

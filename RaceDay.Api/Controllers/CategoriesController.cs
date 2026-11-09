@@ -86,7 +86,7 @@ public class CategoriesController : ControllerBase
             return NotFound();
 
         if (raceEvent.OrganiserID != organiserId.Value)
-            return Forbid();
+            return StatusCode(StatusCodes.Status403Forbidden);
 
         if (request.MinimumAge.HasValue &&
             request.MaximumAge.HasValue &&
@@ -157,7 +157,7 @@ public class CategoriesController : ControllerBase
             return NotFound();
 
         if (raceEvent.OrganiserID != organiserId.Value)
-            return Forbid();
+            return StatusCode(StatusCodes.Status403Forbidden);
 
         if (request.MinimumAge.HasValue &&
             request.MaximumAge.HasValue &&
@@ -220,7 +220,7 @@ public class CategoriesController : ControllerBase
             return NotFound();
 
         if (raceEvent.OrganiserID != organiserId.Value)
-            return Forbid();
+            return StatusCode(StatusCodes.Status403Forbidden);
 
         _db.Categories.Remove(category);
 

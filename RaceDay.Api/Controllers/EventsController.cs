@@ -134,7 +134,7 @@ public class EventsController : ControllerBase
             return NotFound();
 
         if (raceEvent.OrganiserID != organiserId.Value)
-            return Forbid();
+            return StatusCode(StatusCodes.Status403Forbidden);
 
         var typeExists = await _db.EventTypes
             .AnyAsync(t => t.EventTypeID == request.EventTypeId);
@@ -177,7 +177,7 @@ public class EventsController : ControllerBase
             return NotFound();
 
         if (raceEvent.OrganiserID != organiserId.Value)
-            return Forbid();
+            return StatusCode(StatusCodes.Status403Forbidden);
 
         _db.Events.Remove(raceEvent);
 
