@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace RaceDay.Api.Models;
@@ -54,6 +54,10 @@ public class Event
     // Records when the event was created.
     // We will configure the database default in RaceDayDbContext.
     public DateTime CreatedAt { get; set; }
+
+    // Private Azure Blob path for the event banner; served through the API.
+    [StringLength(500)]
+    public string? BannerImagePath { get; set; }
 
     // Navigation property: lets Entity Framework load the event type
     // related to this event.

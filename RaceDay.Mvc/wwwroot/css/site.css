@@ -114,10 +114,26 @@ tbody tr:last-child td { border-bottom: 0; }
 .inline-form select { width: auto; min-width: 8.5rem; }
 .text-button { border: 0; background: none; color: #8e3027; font: inherit; font-weight: 600; cursor: pointer; }
 .status-pill { display: inline-flex; padding: .25rem .55rem; border-radius: 99px; background: var(--mint); color: var(--green-dark); font-size: .72rem; font-weight: 700; }
+.content-section { margin-top: 2.5rem; }
+.content-section > h2 { font-size: 1.5rem; }
+.page-heading { margin-bottom: 1.6rem; }
+.page-heading > p:last-child { color: var(--muted); line-height: 1.6; }
+.card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); gap: 1rem; margin-top: 1rem; }
+.card-grid .dashboard-card { padding: 1.35rem; }
+.card-grid .card-kicker { color: var(--green); }
+.dashboard-card { display: flex; justify-content: space-between; gap: 1rem; padding: 1.4rem; margin-top: 1rem; }
+.dashboard-card h2, .dashboard-card h3 { margin: .45rem 0; font-size: 1.25rem; }
+.dashboard-card p { color: var(--muted); line-height: 1.55; }
+.search-form { display: grid; grid-template-columns: 1fr auto; gap: .7rem; align-items: end; max-width: 720px; margin: 1.5rem 0; }
+.search-form label { grid-column: 1 / -1; }
+.form-card { max-width: 640px; }
 
 @media (max-width: 720px) {
     .site-header { align-items: flex-start; flex-direction: column; padding: 1rem 5vw; }
     .main-nav { width: 100%; flex-wrap: wrap; gap: .8rem 1rem; }
+    .search-form { grid-template-columns: 1fr; }
+    .search-form label { grid-column: auto; }
+    .dashboard-card { flex-direction: column; }
     .page-shell { padding-top: 2rem; }
     .hero, .form-page { grid-template-columns: 1fr; gap: 1.5rem; }
     .hero-card { min-height: 260px; }

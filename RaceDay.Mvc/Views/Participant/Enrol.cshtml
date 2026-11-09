@@ -1,0 +1,8 @@
+@model ParticipantEnrolmentFormViewModel
+@{ ViewData["Title"] = "Enrol in event"; }
+<section class="page-heading"><p class="eyebrow">Participant · Enrolment</p><h1>Enrol in @Model.EventName</h1><p>Choose the category that applies to you.</p></section>
+<form asp-action="Enrol" asp-route-id="@Model.EventId" method="post" class="form-card">
+    <div asp-validation-summary="ModelOnly" class="validation-summary"></div>
+    <label asp-for="CategoryId">Category</label><select asp-for="CategoryId"><option value="0">Choose a category</option>@foreach(var category in Model.Categories){<option value="@category.CategoryID">@category.CategoryName (@(category.MinimumAge?.ToString() ?? "Any")–@(category.MaximumAge?.ToString() ?? "Any"))</option>}</select><span asp-validation-for="CategoryId" class="field-error"></span>
+    <button class="button button-primary" type="submit">Confirm enrolment</button><a asp-action="EventDetails" asp-route-id="@Model.EventId">Cancel</a>
+</form>

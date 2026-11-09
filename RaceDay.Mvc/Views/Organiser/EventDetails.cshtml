@@ -1,5 +1,9 @@
 @model OrganiserEventDetailsViewModel
 @{ ViewData["Title"] = Model.Event.EventName; }
 <section class="content-heading"><p class="eyebrow">Event details · @Model.Event.EventDate.ToString("dd MMM yyyy")</p><h1>@Model.Event.EventName</h1><p>@Model.Event.Description</p></section>
+@if (!string.IsNullOrWhiteSpace(Model.Event.BannerImagePath))
+{
+    <img class="event-banner" src="@Url.Action("BannerImage", "Organiser", new { id = Model.Event.EventID })" alt="@Model.Event.EventName banner" />
+}
 <div class="dashboard-card"><div><span class="card-kicker">Race information</span><dl><div><dt>Location</dt><dd>@Model.Event.Location</dd></div><div><dt>Distance</dt><dd>@Model.Event.Distance km</dd></div><div><dt>Type</dt><dd>@(Model.Event.EventTypeName ?? "Race")</dd></div><div><dt>Organiser</dt><dd>@(Model.IsOwner ? "You" : $"Organiser #{Model.Event.OrganiserID}")</dd></div></dl></div></div>
 <div class="button-row"><a class="button button-secondary" asp-action="Events">All events</a>@if (Model.IsOwner) { <a class="button button-primary" asp-action="EditEvent" asp-route-id="@Model.Event.EventID">Edit details</a><a class="button button-secondary" asp-controller="OrganiserCategories" asp-action="Categories" asp-route-eventId="@Model.Event.EventID">Categories</a><a class="button button-secondary" asp-controller="OrganiserRace" asp-action="Enrolments" asp-route-eventId="@Model.Event.EventID">Enrolments</a><a class="button button-secondary" asp-controller="OrganiserRace" asp-action="Results" asp-route-eventId="@Model.Event.EventID">Results</a> }</div>

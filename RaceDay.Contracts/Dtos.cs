@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace RaceDay.Contracts;
 
@@ -92,6 +92,7 @@ public sealed class UserProfileResponse
     public string LastName { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
     public string? PhoneNumber { get; set; }
+    public string? ProfileImagePath { get; set; }
     public string Role { get; set; } = string.Empty;
     public DateTime CreatedAt { get; set; }
 }
@@ -185,6 +186,11 @@ public sealed class EventTypeResponse
 /// Event data returned by list, detail and mutation endpoints.
 /// Some mutation responses omit description and event type name.
 /// </summary>
+public sealed class ImageUploadResponse
+{
+    public string ImagePath { get; set; } = string.Empty;
+}
+
 public sealed class EventResponse
 {
     public int EventID { get; set; }
@@ -196,6 +202,7 @@ public sealed class EventResponse
     public int EventTypeID { get; set; }
     public string? EventTypeName { get; set; }
     public int OrganiserID { get; set; }
+    public string? BannerImagePath { get; set; }
 }
 
 public sealed class CategoryResponse

@@ -1,9 +1,10 @@
-﻿
+
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using RaceDay.Api.Data;
 using RaceDay.Api.Models;
 using RaceDay.Api.Security;
+using RaceDay.Api.Services;
 using RaceDay.Contracts;
 
 namespace RaceDay.Api.Controllers;
@@ -36,7 +37,8 @@ public class EventsController : ControllerBase
                 e.Distance,
                 e.EventTypeID,
                 EventTypeName = e.EventType!.TypeName,
-                e.OrganiserID
+                e.OrganiserID,
+                e.BannerImagePath
             })
             .ToListAsync();
 
@@ -60,7 +62,8 @@ public class EventsController : ControllerBase
                 e.Distance,
                 e.EventTypeID,
                 EventTypeName = e.EventType!.TypeName,
-                e.OrganiserID
+                e.OrganiserID,
+                e.BannerImagePath
             })
             .SingleOrDefaultAsync();
 
@@ -112,7 +115,8 @@ public class EventsController : ControllerBase
                 raceEvent.Location,
                 raceEvent.Distance,
                 raceEvent.EventTypeID,
-                raceEvent.OrganiserID
+                raceEvent.OrganiserID,
+                raceEvent.BannerImagePath
             });
     }
 
@@ -157,7 +161,8 @@ public class EventsController : ControllerBase
             raceEvent.EventName,
             raceEvent.EventDate,
             raceEvent.Location,
-            raceEvent.Distance
+            raceEvent.Distance,
+            BannerImagePath = raceEvent.BannerImagePath
         });
     }
 
@@ -194,5 +199,75 @@ public class EventsController : ControllerBase
         }
 
         return NoContent();
+    }
+
+    [HttpPost("{id:int}/banner")]
+    [SessionAuthorize("ORGANISER")]
+    [Consumes("multipart/form-data")]
+    [RequestSizeLimit(5 * 1024 * 1024 + 65536)]
+    public async Task<IActionResult> UploadBanner(
+        int id,
+        IFormFile file,
+        [FromServices] IBlobStorageService blobStorage,
+        CancellationToken cancellationToken)
+    {
+        var organiserId = HttpContext.Session.GetInt32("UserId");
+        if (organiserId is null)
+            return Unauthorized();
+
+        var raceEvent = await _db.Events.FindAsync(id);
+        if (raceEvent is null)
+            return NotFound();
+
+        if (raceEvent.OrganiserID != organiserId.Value)
+            return StatusCode(StatusCodes.Status403Forbidden);
+
+        try
+        {
+            raceEvent.BannerImagePath = await blobStorage.UploadAsync(
+                file, "event-banners", cancellationToken);
+            await _db.SaveChangesAsync(cancellationToken);
+        }
+        catch (ArgumentException exception)
+        {
+            return BadRequest(new { message = exception.Message });
+        }
+        catch (InvalidOperationException)
+        {
+            return StatusCode(StatusCodes.Status503ServiceUnavailable,
+                new { message = "Image storage is not configured." });
+        }
+
+        return Ok(new ImageUploadResponse { ImagePath = raceEvent.BannerImagePath! });
+    }
+
+    // Event banners are public event media, but the underlying blob container remains private.
+    [HttpGet("{id:int}/banner-image")]
+    public async Task<IActionResult> GetBannerImage(
+        int id,
+        [FromServices] IBlobStorageService blobStorage,
+        CancellationToken cancellationToken)
+    {
+        var imagePath = await _db.Events
+            .AsNoTracking()
+            .Where(raceEvent => raceEvent.EventID == id)
+            .Select(raceEvent => raceEvent.BannerImagePath)
+            .SingleOrDefaultAsync(cancellationToken);
+
+        if (string.IsNullOrWhiteSpace(imagePath))
+            return NotFound();
+
+        try
+        {
+            var image = await blobStorage.DownloadAsync(imagePath, cancellationToken);
+            if (image is null)
+                return NotFound();
+
+            return File(image.Content, image.ContentType);
+        }
+        catch (InvalidOperationException)
+        {
+            return StatusCode(StatusCodes.Status503ServiceUnavailable);
+        }
     }
 }

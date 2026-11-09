@@ -106,6 +106,14 @@ public sealed class OrganiserController : ProtectedPageController
         if (!result.IsSuccess)
             return await ReturnEventFormForApiErrorAsync(model, result, cancellationToken);
 
+        if (model.Banner is { Length: > 0 })
+        {
+            var imageResult = await _api.UploadImageAsync(
+                $"api/events/{result.Value!.EventID}/banner", model.Banner, cancellationToken);
+            if (!imageResult.IsSuccess)
+                TempData["WarningMessage"] = "The event was saved, but its banner could not be uploaded.";
+        }
+
         TempData["SuccessMessage"] = "Event created successfully.";
         return RedirectToAction(nameof(EventDetails), new { id = result.Value!.EventID });
     }
@@ -147,7 +155,8 @@ public sealed class OrganiserController : ProtectedPageController
             EventDate = raceEvent.EventDate,
             Location = raceEvent.Location,
             Distance = raceEvent.Distance,
-            EventTypeId = raceEvent.EventTypeID
+            EventTypeId = raceEvent.EventTypeID,
+            BannerImageAvailable = !string.IsNullOrWhiteSpace(raceEvent.BannerImagePath)
         };
 
         var typeFailure = await LoadEventTypesAsync(model, cancellationToken);
@@ -183,7 +192,26 @@ public sealed class OrganiserController : ProtectedPageController
         if (!result.IsSuccess)
             return await ReturnEventFormForApiErrorAsync(model, result, cancellationToken);
 
-        TempData["SuccessMessage"] = "Event details updated.";
+        if (model.Banner is { Length: > 0 })
+        {
+            var imageResult = await _api.UploadImageAsync(
+                $"api/events/{id}/banner", model.Banner, cancellationToken);
+
+            if (!imageResult.IsSuccess)
+            {
+                TempData["WarningMessage"] =
+                    "Event details were saved, but the banner could not be uploaded.";
+
+                return RedirectToAction(nameof(EventDetails), new { id });
+            }
+
+            TempData["SuccessMessage"] = "Event details and banner updated.";
+        }
+        else
+        {
+            TempData["SuccessMessage"] = "Event details updated.";
+        }
+
         return RedirectToAction(nameof(EventDetails), new { id });
     }
 
@@ -236,4 +264,26 @@ public sealed class OrganiserController : ProtectedPageController
         if (model.EventDate == default)
             ModelState.AddModelError(nameof(model.EventDate), "Choose an event date.");
     }
+
+    [HttpGet("events/{id:int}/banner-image")]
+    public async Task<IActionResult> BannerImage(int id, CancellationToken cancellationToken)
+    {
+        var failure = await RequireOrganiserAsync(cancellationToken);
+        if (failure is not null)
+            return failure;
+
+        var (raceEvent, eventFailure) = await RequireOwnedEventAsync(id, cancellationToken);
+        if (eventFailure is not null)
+            return eventFailure;
+        if (string.IsNullOrWhiteSpace(raceEvent!.BannerImagePath))
+            return NotFound();
+
+        var image = await _api.GetImageAsync(
+            $"api/events/{id}/banner-image", cancellationToken);
+        if (!image.IsSuccess || image.Value is null)
+            return NotFound();
+
+        return File(image.Value.Bytes, image.Value.ContentType);
+    }
+
 }

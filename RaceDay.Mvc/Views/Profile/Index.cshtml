@@ -8,7 +8,14 @@
     <p>Your profile is loaded from the RaceDay API for the currently signed-in account.</p>
 </section>
 <section class="profile-card">
-    <div class="profile-avatar" aria-hidden="true">@Model.FirstName.FirstOrDefault()@Model.LastName.FirstOrDefault()</div>
+    @if (!string.IsNullOrWhiteSpace(Model.ProfileImagePath))
+    {
+        <img class="profile-photo" src="@Url.Action("Image", "Profile")" alt="Profile picture" />
+    }
+    else
+    {
+        <div class="profile-avatar" aria-hidden="true">@Model.FirstName.FirstOrDefault()@Model.LastName.FirstOrDefault()</div>
+    }
     <div class="profile-details">
         <h2>@Model.FirstName @Model.LastName</h2>
         <dl>
@@ -18,4 +25,12 @@
             <div><dt>Member since</dt><dd>@Model.CreatedAt.ToString("d MMM yyyy")</dd></div>
         </dl>
     </div>
+</section>
+<section class="form-card">
+    <h2>Profile picture</h2>
+    <form asp-action="UploadImage" method="post" enctype="multipart/form-data">
+        <label for="image">Choose a JPEG, PNG or WebP image (maximum 5 MB)</label>
+        <input id="image" name="image" type="file" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" required />
+        <button class="button button-primary" type="submit">Upload profile picture</button>
+    </form>
 </section>

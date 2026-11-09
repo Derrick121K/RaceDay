@@ -1,0 +1,27 @@
+@model ParticipantDashboardViewModel
+@{ ViewData["Title"] = "Participant dashboard"; }
+<section class="dashboard-hero">
+    <p class="eyebrow">Participant dashboard</p>
+    <h1>Welcome, @Model.Profile.FirstName.</h1>
+    <p>Find your next event, track your entries and check your race results.</p>
+    <a class="button button-primary" asp-action="Events">Browse events</a>
+</section>
+<section class="dashboard-card"><div><span class="card-kicker">Your account</span><h2>@Model.Profile.FirstName @Model.Profile.LastName</h2><p>@Model.Profile.Email</p></div><span class="role-pill">PARTICIPANT</span></section>
+<section class="content-section"><h2>My race activity</h2><p>You have <strong>@Model.EnrolmentCount</strong> @(Model.EnrolmentCount == 1 ? "enrolment" : "enrolments").</p>
+    <div class="card-grid">
+    @foreach (var entry in Model.RecentEnrolments)
+    { <article class="dashboard-card"><div><span class="card-kicker">Enrolment status</span><h3><a asp-action="EventDetails" asp-route-id="@entry.EventID">Event #@entry.EventID</a></h3><p>@entry.Status · @entry.EnrolmentDate.ToString("d")</p></div></article> }
+    @if (Model.RecentEnrolments.Count == 0) { <p class="empty-state">You have not enrolled in an event yet. Browse events to get started.</p> }
+    </div>
+</section>
+<section class="content-section"><div class="section-heading"><h2>Upcoming events</h2><a asp-action="Events">See all</a></div>
+    <div class="card-grid">
+    @foreach (var raceEvent in Model.UpcomingEvents)
+    { <article class="dashboard-card"><div><span class="card-kicker">@raceEvent.EventDate.ToString("d")</span><h3><a asp-action="EventDetails" asp-route-id="@raceEvent.EventID">@raceEvent.EventName</a></h3><p>@raceEvent.Location · @raceEvent.EventTypeName</p></div></article> }
+    @if (Model.UpcomingEvents.Count == 0) { <p class="empty-state">There are no upcoming events available right now.</p> }
+    </div>
+</section>
+<section class="content-section"><h2>Recent results</h2>
+    @if (Model.RecentResults.Count == 0) { <p class="empty-state">Your results will appear here after an organiser records them.</p> }
+    else { <div class="table-wrap"><table><thead><tr><th>Event</th><th>Date</th><th>Category</th><th>Finish</th><th>Position</th></tr></thead><tbody>@foreach(var result in Model.RecentResults){<tr><td>@result.EventName</td><td>@result.EventDate.ToString("d")</td><td>@result.CategoryName</td><td>@result.FinishTime</td><td>@result.FinishingPosition</td></tr>}</tbody></table></div> }
+</section>

@@ -1,11 +1,17 @@
 @model OrganiserEventFormViewModel
 @{ ViewData["Title"] = Model.EventId.HasValue ? "Edit event" : "Create event"; }
 <section class="form-page"><div class="form-intro"><p class="eyebrow">Organiser · Event</p><h1>@ViewData["Title"]</h1><p>Enter the event details below. The API validates and saves the event.</p></div>
-<form class="form-card" asp-action="@(Model.EventId.HasValue ? "EditEvent" : "CreateEvent")" asp-route-id="@Model.EventId" method="post">
+<form class="form-card" asp-action="@(Model.EventId.HasValue ? "EditEvent" : "CreateEvent")" asp-route-id="@Model.EventId" method="post" enctype="multipart/form-data">
     <div asp-validation-summary="ModelOnly" class="validation-summary"></div>
     <label asp-for="EventName">Event name</label><input asp-for="EventName" /><span asp-validation-for="EventName" class="field-error"></span>
     <label asp-for="Description">Description</label><textarea asp-for="Description" rows="4"></textarea><span asp-validation-for="Description" class="field-error"></span>
     <div class="field-grid"><div><label asp-for="EventDate">Date</label><input asp-for="EventDate" type="date" /><span asp-validation-for="EventDate" class="field-error"></span></div><div><label asp-for="Location">Location</label><input asp-for="Location" /><span asp-validation-for="Location" class="field-error"></span></div></div>
     <div class="field-grid"><div><label asp-for="Distance">Distance (km)</label><input asp-for="Distance" type="number" min="0.01" step="0.01" /><span asp-validation-for="Distance" class="field-error"></span></div><div><label asp-for="EventTypeId">Event type</label><select asp-for="EventTypeId"><option value="">Choose type</option>@foreach (var type in Model.EventTypes) { <option value="@type.EventTypeID">@type.TypeName</option> }</select><span asp-validation-for="EventTypeId" class="field-error"></span></div></div>
+    @if (Model.BannerImageAvailable && Model.EventId.HasValue)
+    {
+        <img class="event-banner-preview" src="@Url.Action("BannerImage", "Organiser", new { id = Model.EventId })" alt="Current event banner" />
+    }
+    <label for="Banner">Event banner (JPEG, PNG or WebP; max 5 MB)</label>
+    <input id="Banner" name="Banner" type="file" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" />
     <button class="button button-primary button-wide" type="submit">Save event</button><a asp-action="Events">Cancel</a>
 </form></section>

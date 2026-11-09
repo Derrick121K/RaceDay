@@ -132,6 +132,12 @@ Open `https://localhost:7180`. The API base URL defaults to
 when the API runs elsewhere. If the local HTTPS development certificate is not
 trusted, run `dotnet dev-certs https --trust` once for the current user.
 
+After signing in as a Participant, use the participant dashboard to browse and
+search events, view event categories, enrol, and review personal enrolments and
+results. The MVC requests the authenticated participant's enrolments and results
+from the API; it does not connect to SQL Server. The API validates event/category
+membership and duplicate enrolments and enforces participant ownership.
+
 The MVC app forwards the API's HttpOnly session cookie per browser request. It
 does not maintain a shared cookie container or create a separate MVC login
 session. See [docs/PART3_API_INTEGRATION_MAP.md](docs/PART3_API_INTEGRATION_MAP.md)
@@ -242,6 +248,49 @@ The API checks that a selected category belongs to the chosen event and prevents
 | PUT | `/api/enrolments/{enrolmentId}/result` | Update a result for an owned event | Organiser / owner |
 | DELETE | `/api/enrolments/{enrolmentId}/result` | Delete a result for an owned event | Organiser / owner |
 
+## Image Storage and Blob Uploads
+
+RaceDay supports event banner and participant profile image uploads.
+The MVC application sends uploads to the API. The API validates JPEG,
+PNG and WebP images (maximum 5 MB) and stores them through
+IBlobStorageService using Azure.Storage.Blobs. The database stores
+relative Blob paths. MVC retrieves images through API endpoints and
+does not connect directly to Blob Storage.
+
+API routes:
+- POST /api/events/{id}/banner
+- GET /api/events/{id}/banner-image
+- POST /api/users/me/profile-image
+- GET /api/users/me/profile-image
+
+### Local Blob Storage
+
+The local integration was tested with Azurite, an Azure Storage emulator.
+This verifies local Blob integration; it is not evidence of a live Azure
+Storage account deployment.
+
+Start Azurite:
+docker run -d --name raceday-azurite --restart unless-stopped `
+  -p 127.0.0.1:10000:10000 -v raceday-azurite-data:/data `
+  mcr.microsoft.com/azure-storage/azurite:3.35.0 `
+  azurite --blobHost 0.0.0.0 --location /data --skipApiVersionCheck
+
+## Docker Build and Run
+
+Build from the repository root:
+docker build -f .\RaceDay.Mvc\Dockerfile -t raceday-mvc:part3-verified .
+
+Run the MVC container. The API must be running on the host at port 5000:
+docker run -d --name raceday-mvc-part3-verified `
+  -p 127.0.0.1:8082:8080 `
+  -e ASPNETCORE_ENVIRONMENT=Development `
+  -e Api__BaseUrl=http://host.docker.internal:5000/ `
+  -v raceday-mvc-dpkeys-verified:/home/app/.aspnet/DataProtection-Keys `
+  raceday-mvc:part3-verified
+
+Open http://localhost:8082. Use localhost rather than 127.0.0.1
+in the browser because of the application's allowed-host configuration.
+
 ## Running Automated Tests
 
 The test project uses xUnit, ASP.NET Core's test host and Entity Framework Core's in-memory provider.
@@ -289,21 +338,13 @@ to SQL Server itself.
 
 ## Continuous Integration
 
-The existing Part 2 API workflow is located at:
+Part 3 workflow: .github/workflows/part3-ci.yml
 
-`.github/workflows/part2-ci.yml`
+The workflow runs on pushes and pull requests targeting main and
+part3-mvc-development. It restores, builds and tests RaceDay.slnx.
 
-It runs on pushes and pull requests targeting `main` or `part2-api-development`. The workflow:
-
-1. Checks out the repository.
-2. Sets up the .NET 8 SDK.
-3. Restores dependencies.
-4. Builds the API and its test project.
-5. Runs the automated tests.
-
-The latest recorded Part 2 workflow run succeeded:
-
-[View the GitHub Actions run](https://github.com/Derrick121K/RaceDay/actions/runs/38937672152)
+The Part 2 workflow remains available at .github/workflows/part2-ci.yml.
+Add the successful Part 3 GitHub Actions run URL after pushing.
 
 ## Part 1 Documentation
 
@@ -328,3 +369,13 @@ Part 2 development branch:
 https://github.com/Derrick121K/RaceDay/tree/part2-api-development
 
 [Video link](https://youtu.be/Ky8FH73jlck)
+
+## Part 3 Video Demonstration
+
+Add the unlisted YouTube Part 3 demonstration URL here after recording.
+The demonstration should show the organiser and participant workflows,
+image upload, Docker deployment, repository and successful CI run.
+
+## Part 3 Repository
+
+https://github.com/Derrick121K/RaceDay/tree/part3-mvc-development

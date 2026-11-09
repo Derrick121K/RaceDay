@@ -1,0 +1,42 @@
+name: RaceDay Part 3 Build and Test
+
+on:
+  push:
+    branches:
+      - main
+      - part3-mvc-development
+  pull_request:
+    branches:
+      - main
+      - part3-mvc-development
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-test:
+    name: Build and test full RaceDay solution
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up .NET SDKs
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: |
+            8.0.x
+            10.0.x
+
+      - name: Show installed SDKs
+        run: dotnet --list-sdks
+
+      - name: Restore solution
+        run: dotnet restore RaceDay.slnx
+
+      - name: Build complete solution
+        run: dotnet build RaceDay.slnx --configuration Release --no-restore
+
+      - name: Run all tests
+        run: dotnet test RaceDay.slnx --configuration Release --no-build --verbosity normal

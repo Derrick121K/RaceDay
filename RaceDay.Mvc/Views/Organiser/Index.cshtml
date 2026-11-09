@@ -1,8 +1,9 @@
+@using RaceDay.Contracts
 @model OrganiserDashboardViewModel
-@{ ViewData["Title"] = "Organiser workspace"; }
-<section class="content-heading"><p class="eyebrow">RaceDay management</p><h1>Organiser workspace</h1><p>Manage your race calendar, entries and results.</p></section>
+@{ ViewData["Title"] = "Organiser workspace"; var currentUser = ViewData["CurrentUser"] as UserProfileResponse; }
+<section class="content-heading"><p class="eyebrow">RaceDay management · Welcome back, @currentUser?.FirstName</p><h1>Organiser workspace</h1><p>Manage your race calendar, entries and results.</p></section>
 <div class="summary-grid"><article><span class="card-kicker">Your events</span><strong>@Model.EventCount</strong></article><article><span class="card-kicker">Upcoming</span><strong>@Model.UpcomingEventCount</strong></article><article><span class="card-kicker">Enrolments</span><strong>@Model.EnrolmentCount</strong></article></div>
 <section class="section-heading"><div><h2>Upcoming events</h2><p>Events you organise, ordered by date.</p></div><a class="button button-primary" asp-action="CreateEvent">Create event</a></section>
 @if (Model.UpcomingEvents.Count == 0) { <div class="empty-state"><h2>No upcoming events</h2><p>Create an event to start managing registrations.</p></div> }
-else { <div class="management-list">@foreach (var item in Model.UpcomingEvents) { <article class="management-card"><div><p class="eyebrow">@item.EventDate.ToString("dd MMM yyyy") · @item.Location</p><h2>@item.EventName</h2><p>@item.Distance km · @(item.EventTypeName ?? "Race")</p></div><a asp-action="EventDetails" asp-route-id="@item.EventID">Manage event →</a></article> }</div> }
+else { <div class="management-list">@foreach (var item in Model.UpcomingEvents) { <article class="management-card"><div><p class="eyebrow">@item.EventDate.ToString("dd MMM yyyy") Â· @item.Location</p><h2>@item.EventName</h2><p>@item.Distance km Â· @(item.EventTypeName ?? "Race")</p></div><a asp-action="EventDetails" asp-route-id="@item.EventID">Manage event â†’</a></article> }</div> }
 <p class="button-row"><a asp-action="Events">View all events</a></p>

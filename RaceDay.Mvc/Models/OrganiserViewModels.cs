@@ -40,6 +40,8 @@ public sealed class OrganiserEventFormViewModel
     public int EventTypeId { get; set; }
 
     public IReadOnlyList<EventTypeResponse> EventTypes { get; set; } = [];
+    public IFormFile? Banner { get; set; }
+    public bool BannerImageAvailable { get; set; }
 }
 
 public sealed class OrganiserEventDetailsViewModel

@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
+using System.Net.Http.Headers;
 using System.Text.Json;
 using RaceDay.Contracts;
 
@@ -32,6 +33,21 @@ public sealed class RaceDayApiClient
         CancellationToken cancellationToken = default) =>
         SendAsync<IReadOnlyList<EventResponse>>(
             HttpMethod.Get, "api/events", null, cancellationToken);
+
+    public Task<ApiCallResult<IReadOnlyList<EventEnrolmentResponse>>> GetMyEnrolmentsAsync(
+        CancellationToken cancellationToken = default) =>
+        SendAsync<IReadOnlyList<EventEnrolmentResponse>>(
+            HttpMethod.Get, "api/enrolments/me", null, cancellationToken);
+
+    public Task<ApiCallResult<IReadOnlyList<ParticipantResultResponse>>> GetMyResultsAsync(
+        CancellationToken cancellationToken = default) =>
+        SendAsync<IReadOnlyList<ParticipantResultResponse>>(
+            HttpMethod.Get, "api/results/me", null, cancellationToken);
+
+    public Task<ApiCallResult<object>> CreateEnrolmentAsync(
+        EnrolmentRequest request,
+        CancellationToken cancellationToken = default) =>
+        SendAsync<object>(HttpMethod.Post, "api/enrolments", request, cancellationToken);
 
     public Task<ApiCallResult<EventResponse>> GetEventAsync(
         int eventId,
@@ -129,6 +145,62 @@ public sealed class RaceDayApiClient
         CancellationToken cancellationToken = default) =>
         SendAsync<object>(HttpMethod.Post, "api/auth/logout", new { }, cancellationToken);
 
+    public async Task<ApiCallResult<ImageUploadResponse>> UploadImageAsync(
+        string route,
+        IFormFile file,
+        CancellationToken cancellationToken = default)
+    {
+        using var form = new MultipartFormDataContent();
+        await using var stream = file.OpenReadStream();
+        using var imageContent = new StreamContent(stream);
+        imageContent.Headers.ContentType =
+            new MediaTypeHeaderValue(file.ContentType);
+        form.Add(imageContent, "file", Path.GetFileName(file.FileName));
+
+        using var request = new HttpRequestMessage(HttpMethod.Post, route)
+        {
+            Content = form
+        };
+        return await SendRequestAsync<ImageUploadResponse>(request, route, cancellationToken);
+    }
+
+    public async Task<ApiCallResult<ApiImageContent>> GetImageAsync(
+        string route,
+        CancellationToken cancellationToken = default)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Get, route);
+        HttpResponseMessage response;
+        try
+        {
+            response = await _httpClient.SendAsync(
+                request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+        }
+        catch (HttpRequestException)
+        {
+            return new ApiCallResult<ApiImageContent>(
+                null, default, "The RaceDay API could not be reached.", IsConnectionFailure: true);
+        }
+        catch (TaskCanceledException) when (!cancellationToken.IsCancellationRequested)
+        {
+            return new ApiCallResult<ApiImageContent>(
+                null, default, "The RaceDay API did not respond in time.", IsConnectionFailure: true);
+        }
+
+        using (response)
+        {
+            if (!response.IsSuccessStatusCode)
+            {
+                var message = await ReadErrorMessageAsync(response, route, cancellationToken);
+                return new ApiCallResult<ApiImageContent>(response.StatusCode, default, message);
+            }
+
+            var bytes = await response.Content.ReadAsByteArrayAsync(cancellationToken);
+            var contentType = response.Content.Headers.ContentType?.MediaType
+                ?? "application/octet-stream";
+            return new ApiCallResult<ApiImageContent>(
+                response.StatusCode, new ApiImageContent(bytes, contentType), null);
+        }
+    }
     private async Task<ApiCallResult<T>> SendAsync<T>(
         HttpMethod method,
         string route,
@@ -139,6 +211,14 @@ public sealed class RaceDayApiClient
         if (body is not null)
             request.Content = JsonContent.Create(body);
 
+        return await SendRequestAsync<T>(request, route, cancellationToken);
+    }
+
+    private async Task<ApiCallResult<T>> SendRequestAsync<T>(
+        HttpRequestMessage request,
+        string route,
+        CancellationToken cancellationToken)
+    {
         HttpResponseMessage response;
         try
         {
@@ -242,3 +322,5 @@ public sealed class RaceDayApiClient
         return $"The RaceDay API returned HTTP {(int)response.StatusCode}. Please try again.";
     }
 }
+
+public sealed record ApiImageContent(byte[] Bytes, string ContentType);

@@ -110,7 +110,7 @@ API endpoints.
   public organiser-creation endpoint.
 - Event-banner and profile-image uploads remain incomplete.
 
-## MVC integration implemented through Sprint 3
+## MVC integration implemented through Sprint 4
 
 The MVC project is a server-rendered API client. It references
 `RaceDay.Contracts` for request/response types and contains no SQL Server,
@@ -126,7 +126,14 @@ EF Core, or API database context registration.
 | `GET /Account/Register` | Public | None | Participant-only registration form; it has no role selector. |
 | `POST /Account/Register` | Public, antiforgery required | `RegisterViewModel`: `FirstName`, `LastName`, `Email`, `Password`, optional `PhoneNumber`; MVC always supplies `role=PARTICIPANT` to the API. | On success redirects to login; API validation/connection errors are shown on the form. |
 | `POST /Account/Logout` | Antiforgery required | None; calls `POST /api/auth/logout` with the current API session cookie. | Redirects to login and expires `.RaceDay.Session` in the browser. |
-| `GET /Dashboard` | API session required | Calls `GET /api/users/me`. | Participant- or organiser-specific dashboard and navigation. A missing/expired session redirects to login. |
+| `GET /Dashboard` | API session required | Calls `GET /api/users/me`, then redirects by role to `/participant` or `/organiser`. |
+| `GET /participant` | Participant API session required | Calls `/api/users/me`, `/api/events`, `/api/enrolments/me`, `/api/results/me`. | Personal dashboard with upcoming events, enrolment count/status and recent results. |
+| `GET /participant/events?search={term}` | Participant API session required | Optional search term; calls `/api/events` and `/api/enrolments/me`. | Search by event name, location or event type, with current enrolment indication. |
+| `GET /participant/events/{id}` | Participant API session required | Calls `/api/events/{id}`, `/api/events/{id}/categories`, `/api/enrolments/me`. | Event details, categories, and the participant's enrolment state. |
+| `GET /participant/events/{id}/enrol` | Participant API session required | Loads the event, its categories and `/api/enrolments/me`. | Category selection form; existing enrollment blocks a duplicate attempt. |
+| `POST /participant/events/{id}/enrol` | Participant API session required; antiforgery required | `ParticipantEnrolmentFormViewModel`: `CategoryId`; calls `POST /api/enrolments` with `EnrolmentRequest` (`EventId`, `CategoryId`). | API validates category/event and duplicate rules; MVC displays confirmation or API validation/error. |
+| `GET /participant/enrolments` | Participant API session required | Calls `/api/enrolments/me`, `/api/events`, and event category lookups to enrich only the participant's IDs. | Own event/date/category/enrolment date/status list, including empty state. |
+| `GET /participant/results` | Participant API session required | Calls `/api/results/me`. | Own event/date/category/time/position results, including empty state. |
 | `GET /Profile` | API session required | Calls `GET /api/users/me`. | Safe profile details for the signed-in user. |
 | `GET /organiser` | Organiser API session required | Calls event list and each owned event's enrolment list. | Event, upcoming event and total enrolment summaries. |
 | `GET /organiser/events` | Organiser API session required | Calls `GET /api/events`. | Lists all events, with management links only for owned events. |

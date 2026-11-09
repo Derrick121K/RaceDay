@@ -1,0 +1,6 @@
+@model ParticipantEventDetailsViewModel
+@{ ViewData["Title"] = Model.Event.EventName; }
+<section class="page-heading"><p class="eyebrow">Participant · Event</p><h1>@Model.Event.EventName</h1><p>@Model.Event.EventDate.ToString("D") · @Model.Event.Location</p></section>
+<section class="dashboard-card"><div><h2>Event details</h2><p>@Model.Event.Description</p><p>@Model.Event.Distance km · @Model.Event.EventTypeName</p></div></section>
+<section class="content-section"><h2>Categories</h2>@if(Model.Categories.Count == 0){<p class="empty-state">No categories have been set up for this event yet.</p>}else{<div class="card-grid">@foreach(var category in Model.Categories){<article class="dashboard-card"><div><h3>@category.CategoryName</h3><p>@category.Description</p><p>@(category.MinimumAge?.ToString() ?? "Any")–@(category.MaximumAge?.ToString() ?? "Any") years</p></div></article>}</div>}</section>
+@if(Model.EnrolmentStatus is not null){<p class="status-pill">Your enrolment: @Model.EnrolmentStatus</p>}else if(Model.Categories.Count > 0){<a class="button button-primary" asp-action="Enrol" asp-route-id="@Model.Event.EventID">Enrol in this event</a>}

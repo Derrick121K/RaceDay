@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace RaceDay.Api.Models;
 
@@ -43,6 +43,10 @@ public class User
 
     // A phone number is optional.
     public string? PhoneNumber { get; set; }
+
+    // Private Azure Blob path for the participant profile image.
+    [StringLength(500)]
+    public string? ProfileImagePath { get; set; }
 
     // Records when the account was created.
     // We will set this value when a new account is saved.

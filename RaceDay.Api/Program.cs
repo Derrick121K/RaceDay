@@ -3,6 +3,7 @@ using RaceDay.Api.Data;
 using Microsoft.AspNetCore.Identity;
 using RaceDay.Api.Models;
 using RaceDay.Api.Development;
+using RaceDay.Api.Services;
 using Microsoft.AspNetCore.DataProtection;
 
 
@@ -36,6 +37,7 @@ if (builder.Environment.IsDevelopment())
 // Add services to the container.
 
 builder.Services.AddControllers();
+builder.Services.AddScoped<IBlobStorageService, BlobStorageService>();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();

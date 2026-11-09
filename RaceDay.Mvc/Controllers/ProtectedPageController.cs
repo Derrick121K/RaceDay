@@ -16,6 +16,7 @@ public abstract class ProtectedPageController : Controller
     }
 
     protected UserProfileResponse CurrentProfile { get; private set; } = null!;
+    protected RaceDayApiClient Api => _api;
 
     protected IActionResult AccessDenied()
     {
@@ -101,6 +102,18 @@ public abstract class ProtectedPageController : Controller
             return failure;
 
         return string.Equals(CurrentProfile.Role, "ORGANISER", StringComparison.OrdinalIgnoreCase)
+            ? null
+            : AccessDenied();
+    }
+
+    protected async Task<IActionResult?> RequireParticipantAsync(
+        CancellationToken cancellationToken)
+    {
+        var failure = await RequireProfileAsync(cancellationToken);
+        if (failure is not null)
+            return failure;
+
+        return string.Equals(CurrentProfile.Role, "PARTICIPANT", StringComparison.OrdinalIgnoreCase)
             ? null
             : AccessDenied();
     }

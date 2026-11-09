@@ -1,0 +1,5 @@
+@model ParticipantEnrolmentsViewModel
+@{ ViewData["Title"] = "My enrolments"; }
+<section class="page-heading"><p class="eyebrow">Participant · My races</p><h1>My enrolments</h1><p>Your entries and their current status.</p></section>
+@if(Model.Enrolments.Count == 0){<p class="empty-state">You have not enrolled in any events yet. <a asp-action="Events">Browse events</a>.</p>}
+else{<div class="table-wrap"><table><thead><tr><th>Event</th><th>Date</th><th>Category</th><th>Enrolled</th><th>Status</th></tr></thead><tbody>@foreach(var item in Model.Enrolments){<tr><td>@if(item.Event is not null){<a asp-action="EventDetails" asp-route-id="@item.Event.EventID">@item.Event.EventName</a>}else{<text>Event #@item.Enrolment.EventID</text>}</td><td>@item.Event?.EventDate.ToString("d")</td><td>@(item.Category?.CategoryName ?? "Category unavailable")</td><td>@item.Enrolment.EnrolmentDate.ToString("d")</td><td><span class="status-pill">@item.Enrolment.Status</span></td></tr>}</tbody></table></div>}

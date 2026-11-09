@@ -1,9 +1,10 @@
-﻿using RaceDay.Api.Security;
+using RaceDay.Api.Security;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using RaceDay.Api.Data;
 using RaceDay.Api.Models;
+using RaceDay.Api.Services;
 using RaceDay.Contracts;
 
 namespace RaceDay.Api.Controllers;
@@ -198,6 +199,7 @@ public class AuthController : ControllerBase
                 LastName = account.LastName,
                 Email = account.Email,
                 PhoneNumber = account.PhoneNumber,
+                ProfileImagePath = account.ProfileImagePath,
                 Role = account.Role,
                 CreatedAt = account.CreatedAt
             })
@@ -266,12 +268,80 @@ public class AuthController : ControllerBase
             LastName = user.LastName,
             Email = user.Email,
             PhoneNumber = user.PhoneNumber,
+            ProfileImagePath = user.ProfileImagePath,
             Role = user.Role,
             CreatedAt = user.CreatedAt
         });
     }
 
 
+    [HttpPost("~/api/users/me/profile-image")]
+    [SessionAuthorize]
+    [Consumes("multipart/form-data")]
+    [RequestSizeLimit(5 * 1024 * 1024 + 65536)]
+    public async Task<IActionResult> UploadProfileImage(
+        IFormFile file,
+        [FromServices] IBlobStorageService blobStorage,
+        CancellationToken cancellationToken)
+    {
+        var userId = HttpContext.Session.GetInt32("UserId");
+        if (userId is null)
+            return Unauthorized();
+
+        var user = await _dbContext.Users.FindAsync(userId.Value);
+        if (user is null)
+            return Unauthorized();
+
+        try
+        {
+            user.ProfileImagePath = await blobStorage.UploadAsync(
+                file, "profile-images", cancellationToken);
+            await _dbContext.SaveChangesAsync(cancellationToken);
+        }
+        catch (ArgumentException exception)
+        {
+            return BadRequest(new { message = exception.Message });
+        }
+        catch (InvalidOperationException)
+        {
+            return StatusCode(StatusCodes.Status503ServiceUnavailable,
+                new { message = "Image storage is not configured." });
+        }
+
+        return Ok(new ImageUploadResponse { ImagePath = user.ProfileImagePath! });
+    }
+
+    [HttpGet("~/api/users/me/profile-image")]
+    [SessionAuthorize]
+    public async Task<IActionResult> GetProfileImage(
+        [FromServices] IBlobStorageService blobStorage,
+        CancellationToken cancellationToken)
+    {
+        var userId = HttpContext.Session.GetInt32("UserId");
+        if (userId is null)
+            return Unauthorized();
+
+        var imagePath = await _dbContext.Users
+            .Where(user => user.UserID == userId.Value)
+            .Select(user => user.ProfileImagePath)
+            .SingleOrDefaultAsync(cancellationToken);
+
+        if (string.IsNullOrWhiteSpace(imagePath))
+            return NotFound();
+
+        try
+        {
+            var image = await blobStorage.DownloadAsync(imagePath, cancellationToken);
+            if (image is null)
+                return NotFound();
+
+            return File(image.Content, image.ContentType);
+        }
+        catch (InvalidOperationException)
+        {
+            return StatusCode(StatusCodes.Status503ServiceUnavailable);
+        }
+    }
     // Logout clears the session and returns no response body.
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [HttpPost("logout")]

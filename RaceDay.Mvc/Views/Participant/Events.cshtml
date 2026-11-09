@@ -1,0 +1,6 @@
+@model ParticipantEventsViewModel
+@{ ViewData["Title"] = "Find events"; }
+<section class="page-heading"><p class="eyebrow">Participant · Discover</p><h1>Find an event</h1><p>Search by event, location or event type.</p></section>
+<form method="get" asp-action="Events" class="search-form"><label for="search">Search events</label><input id="search" name="search" value="@Model.Search" placeholder="Event name, location or type" /><button class="button button-primary" type="submit">Search</button></form>
+@if (Model.Events.Count == 0) { <p class="empty-state">No events matched your search.</p> }
+else { <div class="card-grid">@foreach(var raceEvent in Model.Events){<article class="dashboard-card"><div><span class="card-kicker">@raceEvent.EventDate.ToString("d") · @raceEvent.EventTypeName</span><h2><a asp-action="EventDetails" asp-route-id="@raceEvent.EventID">@raceEvent.EventName</a></h2><p>@raceEvent.Location · @raceEvent.Distance km</p><p>@raceEvent.Description</p>@if(Model.EnrolledEventIds.Contains(raceEvent.EventID)){<span class="status-pill">Already enrolled</span>}else{<a class="button button-primary" asp-action="EventDetails" asp-route-id="@raceEvent.EventID">View event</a>}</div></article>}</div> }

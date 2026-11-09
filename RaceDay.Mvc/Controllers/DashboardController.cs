@@ -13,6 +13,11 @@ public sealed class DashboardController : ProtectedPageController
     public async Task<IActionResult> Index(CancellationToken cancellationToken)
     {
         var failure = await RequireProfileAsync(cancellationToken);
-        return failure ?? View(CurrentProfile);
+        if (failure is not null) return failure;
+        if (string.Equals(CurrentProfile.Role, "PARTICIPANT", StringComparison.OrdinalIgnoreCase))
+            return RedirectToAction("Index", "Participant");
+        if (string.Equals(CurrentProfile.Role, "ORGANISER", StringComparison.OrdinalIgnoreCase))
+            return RedirectToAction("Index", "Organiser");
+        return AccessDenied();
     }
 }

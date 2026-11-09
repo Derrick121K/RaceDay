@@ -1,4 +1,4 @@
-﻿
+
 using Microsoft.EntityFrameworkCore;
 using RaceDay.Api.Models;
 
@@ -75,6 +75,9 @@ public class RaceDayDbContext : DbContext
             entity.Property(user => user.PhoneNumber)
                 .HasColumnType("varchar(20)");
 
+            entity.Property(user => user.ProfileImagePath)
+                .HasColumnType("varchar(500)");
+
             // SQL Server fills in the creation date when no value is supplied.
             entity.Property(user => user.CreatedAt)
                 .HasColumnType("datetime2")
@@ -149,6 +152,9 @@ public class RaceDayDbContext : DbContext
             entity.Property(raceEvent => raceEvent.CreatedAt)
                 .HasColumnType("datetime2")
                 .HasDefaultValueSql("SYSDATETIME()");
+
+            entity.Property(raceEvent => raceEvent.BannerImagePath)
+                .HasColumnType("varchar(500)");
 
             // Connects the event to its event type.
             entity.HasOne(raceEvent => raceEvent.EventType)

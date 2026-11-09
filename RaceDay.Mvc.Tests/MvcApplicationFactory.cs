@@ -25,6 +25,10 @@ public sealed class FakeApiState
     public HttpStatusCode? ProfileStatusOverride { get; set; }
     public bool RevokeSessions { get; set; }
     public bool ResultIsRecorded { get; set; }
+    public bool EnrolmentExists { get; set; }
+    public IReadOnlyList<EventEnrolmentResponse> ParticipantEnrolments { get; set; } = [];
+    public IReadOnlyList<ParticipantResultResponse> ParticipantResults { get; set; } = [];
+    public ConcurrentQueue<EnrolmentRequest> CreatedEnrolments { get; } = new();
 }
 
 public sealed class MvcApplicationFactory : WebApplicationFactory<Program>
@@ -116,6 +120,24 @@ internal sealed class FakeRaceDayApiHandler : HttpMessageHandler
         }
 
         var currentProfile = GetProfile(cookie);
+        if (path == "/api/enrolments/me" && request.Method == HttpMethod.Get)
+            return currentProfile?.Role == "PARTICIPANT"
+                ? Json(_state.ParticipantEnrolments)
+                : ErrorResponse(currentProfile is null ? HttpStatusCode.Unauthorized : HttpStatusCode.Forbidden);
+        if (path == "/api/results/me" && request.Method == HttpMethod.Get)
+            return currentProfile?.Role == "PARTICIPANT"
+                ? Json(_state.ParticipantResults)
+                : ErrorResponse(currentProfile is null ? HttpStatusCode.Unauthorized : HttpStatusCode.Forbidden);
+        if (path == "/api/enrolments" && request.Method == HttpMethod.Post)
+        {
+            if (currentProfile?.Role != "PARTICIPANT")
+                return ErrorResponse(currentProfile is null ? HttpStatusCode.Unauthorized : HttpStatusCode.Forbidden);
+            var requestBody = await request.Content!.ReadFromJsonAsync<EnrolmentRequest>(cancellationToken: cancellationToken);
+            _state.CreatedEnrolments.Enqueue(requestBody!);
+            return _state.EnrolmentExists
+                ? ErrorResponse(HttpStatusCode.Conflict, "You have already enrolled in this event.")
+                : Json(new { enrolmentID = 8, eventID = requestBody!.EventId, categoryID = requestBody.CategoryId, status = "ACTIVE" }, HttpStatusCode.Created);
+        }
         if (path == "/api/events" && request.Method == HttpMethod.Get)
             return Json(new[] { SampleEvent(currentProfile?.UserId ?? 1) });
         if (path.StartsWith("/api/events/", StringComparison.Ordinal) &&

@@ -28,7 +28,7 @@ public class AuthenticationAndCookieTests : IClassFixture<MvcApplicationFactory>
         Assert.Contains("Expires=Wed, 01 Jan 2031", setCookie, StringComparison.Ordinal);
         var sessionPair = setCookie.Split(';', 2)[0];
 
-        var dashboard = await client.GetAsync("/Dashboard");
+        var dashboard = await client.GetAsync("/participant");
         Assert.Equal(HttpStatusCode.OK, dashboard.StatusCode);
         Assert.Contains("Alex", await dashboard.Content.ReadAsStringAsync());
         Assert.Contains(_factory.ApiState.Requests, request =>
@@ -96,7 +96,7 @@ public class AuthenticationAndCookieTests : IClassFixture<MvcApplicationFactory>
     {
         using var client = CreateClient();
         await SignInAsync(client, "participant-alex@example.com");
-        var token = await GetAntiforgeryTokenAsync(client, "/Dashboard");
+        var token = await GetAntiforgeryTokenAsync(client, "/participant");
 
         var logout = await client.PostAsync("/Account/Logout", new FormUrlEncodedContent(
         [new("__RequestVerificationToken", token)]));
@@ -111,7 +111,7 @@ public class AuthenticationAndCookieTests : IClassFixture<MvcApplicationFactory>
         Assert.Contains("Secure", clearCookie, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("SameSite=Lax", clearCookie, StringComparison.OrdinalIgnoreCase);
 
-        var protectedPage = await client.GetAsync("/Dashboard");
+        var protectedPage = await client.GetAsync("/participant");
         Assert.Equal(HttpStatusCode.Redirect, protectedPage.StatusCode);
         Assert.Equal("/Account/Login", protectedPage.Headers.Location!.OriginalString);
         Assert.Contains(_factory.ApiState.Requests, request =>
@@ -139,8 +139,8 @@ public class AuthenticationAndCookieTests : IClassFixture<MvcApplicationFactory>
         await SignInAsync(participantClient, "participant-bob@example.com");
         await SignInAsync(organiserClient, "organiser-olivia@example.com");
 
-        var participantPage = await participantClient.GetAsync("/Dashboard");
-        var organiserPage = await organiserClient.GetAsync("/Dashboard");
+        var participantPage = await participantClient.GetAsync("/participant");
+        var organiserPage = await organiserClient.GetAsync("/organiser");
         var participantHtml = await participantPage.Content.ReadAsStringAsync();
         var organiserHtml = await organiserPage.Content.ReadAsStringAsync();
 

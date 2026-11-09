@@ -9,7 +9,10 @@
         }
         else
         {
-            <a asp-controller="Dashboard" asp-action="Index">Participant dashboard</a>
+            <a asp-controller="Participant" asp-action="Index">Participant dashboard</a>
+            <a asp-controller="Participant" asp-action="Events">Find events</a>
+            <a asp-controller="Participant" asp-action="Enrolments">My enrolments</a>
+            <a asp-controller="Participant" asp-action="Results">My results</a>
         }
         <a asp-controller="Profile" asp-action="Index">My profile</a>
         @if (Model.Role == "ORGANISER")
