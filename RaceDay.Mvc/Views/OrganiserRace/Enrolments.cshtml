@@ -1,0 +1,6 @@
+@model OrganiserEnrolmentsViewModel
+@{ ViewData["Title"] = "Enrolments"; }
+<section class="content-heading"><p class="eyebrow">@Model.Event.EventName</p><h1>Enrolments</h1><p>Participant IDs are shown because the API does not expose participant names on this organiser endpoint.</p></section>
+<p><a asp-controller="Organiser" asp-action="EventDetails" asp-route-id="@Model.Event.EventID">← Event details</a></p>
+@if (Model.Enrolments.Count == 0) { <div class="empty-state"><h2>No enrolments yet</h2><p>Participant registrations will appear here.</p></div> }
+else { <div class="table-wrap"><table><thead><tr><th>Participant</th><th>Category</th><th>Enrolled</th><th>Status</th><th>Update status</th></tr></thead><tbody>@foreach (var item in Model.Enrolments) { <tr><td>Participant #@item.ParticipantID</td><td>@Model.CategoryNames.GetValueOrDefault(item.CategoryID, $"Category #{item.CategoryID}")</td><td>@item.EnrolmentDate.ToString("dd MMM yyyy")</td><td><span class="status-pill">@item.Status</span></td><td><form class="inline-form" asp-action="UpdateStatus" asp-route-eventId="@Model.Event.EventID" asp-route-enrolmentId="@item.EnrolmentID" method="post"><select name="status"><option>ACTIVE</option><option>COMPLETED</option><option>CANCELLED</option></select><button class="button button-secondary" type="submit">Save</button></form></td></tr> }</tbody></table></div> }

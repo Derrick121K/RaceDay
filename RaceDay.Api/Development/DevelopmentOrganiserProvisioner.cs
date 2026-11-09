@@ -45,7 +45,7 @@ internal static class DevelopmentOrganiserProvisioner
         if (existingUser)
             throw new InvalidOperationException("That email already has an account.");
 
-        var password = ReadHidden("Password (minimum 8 characters): ");
+        var password = ReadHidden("Password (minimum 8 characters; input masked): ");
         var confirmation = ReadHidden("Confirm password: ");
 
         if (password.Length < 8 || password != confirmation)
@@ -84,13 +84,19 @@ internal static class DevelopmentOrganiserProvisioner
             if (key.Key == ConsoleKey.Backspace)
             {
                 if (characters.Count > 0)
+                {
                     characters.RemoveAt(characters.Count - 1);
+                    Console.Write("\b \b");
+                }
 
                 continue;
             }
 
             if (!char.IsControl(key.KeyChar))
+            {
                 characters.Add(key.KeyChar);
+                Console.Write('*');
+            }
         }
     }
 }

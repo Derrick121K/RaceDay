@@ -1,0 +1,7 @@
+@model OrganiserCategoryFormViewModel
+@{ var isEdit = Model.CategoryId.HasValue; ViewData["Title"] = isEdit ? "Edit category" : "Create category"; }
+<section class="form-page"><div class="form-intro"><p class="eyebrow">@Model.EventName</p><h1>@ViewData["Title"]</h1><p>Set a clear name and optional age range for this category.</p></div><form class="form-card" asp-action="@(isEdit ? "EditCategory" : "CreateCategory")" asp-route-eventId="@Model.EventId" asp-route-categoryId="@Model.CategoryId" method="post">
+<div asp-validation-summary="ModelOnly" class="validation-summary"></div><label asp-for="CategoryName">Category name</label><input asp-for="CategoryName" /><span asp-validation-for="CategoryName" class="field-error"></span>
+<label asp-for="Description">Description <span class="optional">(optional)</span></label><input asp-for="Description" /><span asp-validation-for="Description" class="field-error"></span>
+<div class="field-grid"><div><label asp-for="MinimumAge">Minimum age</label><input asp-for="MinimumAge" type="number" min="0" /><span asp-validation-for="MinimumAge" class="field-error"></span></div><div><label asp-for="MaximumAge">Maximum age</label><input asp-for="MaximumAge" type="number" min="0" /><span asp-validation-for="MaximumAge" class="field-error"></span></div></div>
+<button class="button button-primary button-wide" type="submit">Save category</button><a asp-action="Categories" asp-route-eventId="@Model.EventId">Cancel</a></form></section>

@@ -3,10 +3,34 @@ using RaceDay.Api.Data;
 using Microsoft.AspNetCore.Identity;
 using RaceDay.Api.Models;
 using RaceDay.Api.Development;
+using Microsoft.AspNetCore.DataProtection;
 
 
 
 var builder = WebApplication.CreateBuilder(args);
+
+// In Development, keep each app's persistent key ring under the current
+// Windows user's local profile and protect its keys with that user's DPAPI.
+// This avoids inheriting a default key ring created by another Windows user.
+if (builder.Environment.IsDevelopment())
+{
+    builder.Logging.ClearProviders();
+    builder.Logging.AddConsole();
+    builder.Logging.AddDebug();
+
+    var dataProtection = builder.Services.AddDataProtection()
+        .SetApplicationName("RaceDay.Api");
+
+    if (OperatingSystem.IsWindows())
+    {
+        var keyDirectory = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "RaceDay", "Development", "DataProtection", "Api");
+
+        dataProtection.PersistKeysToFileSystem(new DirectoryInfo(keyDirectory))
+            .ProtectKeysWithDpapi(protectToLocalMachine: false);
+    }
+}
 
 
 // Add services to the container.

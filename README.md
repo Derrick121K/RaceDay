@@ -137,6 +137,14 @@ does not maintain a shared cookie container or create a separate MVC login
 session. See [docs/PART3_API_INTEGRATION_MAP.md](docs/PART3_API_INTEGRATION_MAP.md)
 for the route and cookie contract.
 
+On Windows Development runs, the API and MVC persist separate Data Protection
+key rings under `%LOCALAPPDATA%\RaceDay\Development\DataProtection\Api` and
+`%LOCALAPPDATA%\RaceDay\Development\DataProtection\Mvc`. Each key ring is
+encrypted with DPAPI for the current Windows user. Run each app as that same
+Windows user across restarts. The existing default ASP.NET Core key repository
+is left untouched. Development logging uses console and debug providers;
+Production logging and key configuration are unchanged.
+
 ## Authentication and Session Management
 
 RaceDay uses server-side session state.
@@ -197,6 +205,7 @@ All request and response schemas can also be inspected in Swagger while the API 
 |---|---|---|---|
 | GET | `/api/events` | List events | Public |
 | GET | `/api/events/{id}` | View an event | Public |
+| GET | `/api/event-types` | List event types for organiser event forms | Public |
 | POST | `/api/events` | Create an event | Organiser |
 | PUT | `/api/events/{id}` | Update an owned event | Organiser / owner |
 | DELETE | `/api/events/{id}` | Delete an owned event | Organiser / owner |
@@ -217,6 +226,7 @@ All request and response schemas can also be inspected in Swagger while the API 
 |---|---|---|---|
 | POST | `/api/enrolments` | Enrol in an event and select a category | Participant |
 | GET | `/api/enrolments/me` | List the current participant's enrolments | Participant |
+| GET | `/api/enrolments/{id}` | View an enrolment owned by the participant or organiser of its event | Participant / organiser with ownership |
 | GET | `/api/events/{eventId}/enrolments` | List enrolments for an owned event | Organiser / owner |
 | PUT | `/api/enrolments/{id}/status` | Update an enrolment status for an owned event | Organiser / owner |
 
@@ -261,8 +271,21 @@ The automated tests currently cover:
 - Participant and organiser ownership for enrolment detail
 - MVC authentication, antiforgery, API cookie forwarding/clearing and per-user session isolation
 - MVC login errors, API failures, expired sessions, forbidden access and role-aware navigation
+- Organiser access restrictions, event listing/create/edit, category creation,
+  enrolment status management and result recording/validation
 
-These tests do not constitute complete automated coverage of every event, category, enrolment and result endpoint. Those operations should be verified with additional endpoint-specific tests.
+The MVC organiser workflow is exercised through a fake HTTP API. API controller
+authorization remains covered by the API test project; live database behavior
+should also be checked with a local Development database before a demonstration.
+
+### Live organiser workflow check
+
+With the API and MVC running as described above, sign in using a Development
+organiser provisioned with the README procedure. Open `/organiser`, create an
+event, then use its detail page to add categories, review enrolments and record
+results. A participant session should be denied at `/organiser/events`. The MVC
+uses the API routes and preserves the API's session cookie; it never connects
+to SQL Server itself.
 
 ## Continuous Integration
 

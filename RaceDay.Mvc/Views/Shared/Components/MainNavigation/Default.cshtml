@@ -3,10 +3,19 @@
     <a asp-controller="Home" asp-action="Index">Home</a>
     @if (Model is not null)
     {
-        <a asp-controller="Dashboard" asp-action="Index">
-            @(Model.Role == "ORGANISER" ? "Organiser dashboard" : "Participant dashboard")
-        </a>
+        @if (Model.Role == "ORGANISER")
+        {
+            <a asp-controller="Organiser" asp-action="Index">Organiser dashboard</a>
+        }
+        else
+        {
+            <a asp-controller="Dashboard" asp-action="Index">Participant dashboard</a>
+        }
         <a asp-controller="Profile" asp-action="Index">My profile</a>
+        @if (Model.Role == "ORGANISER")
+        {
+            <a asp-controller="Organiser" asp-action="Events">Manage events</a>
+        }
         <span class="role-pill">@Model.Role</span>
         <form asp-controller="Account" asp-action="Logout" method="post" class="nav-form">
             <button type="submit" class="nav-button">Sign out</button>

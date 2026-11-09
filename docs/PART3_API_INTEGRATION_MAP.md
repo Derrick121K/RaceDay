@@ -50,6 +50,7 @@ Passwords and password hashes are never part of a response DTO.
 | `POST /api/events` | Organiser | `EventRequest`: `eventName`, `description`, `eventDate`, `location`, `distance`, `eventTypeId` | `201` event projection; `400` invalid data/type; `401` unauthenticated; `403` wrong role. |
 | `PUT /api/events/{id}` | Organiser who owns the event | `EventRequest` | `200` updated event projection; `400`, `401`, `403`, `404`. |
 | `DELETE /api/events/{id}` | Organiser who owns the event | None | `204`; `401`, `403`, `404`; `409` if related records prevent deletion. |
+| `GET /api/event-types` | Public | None | `200` list of `EventTypeResponse`: `eventTypeID`, `typeName`, `description`. Used to populate event create/edit forms. |
 
 ## Categories
 
@@ -109,7 +110,7 @@ API endpoints.
   public organiser-creation endpoint.
 - Event-banner and profile-image uploads remain incomplete.
 
-## MVC integration implemented in Sprint 2
+## MVC integration implemented through Sprint 3
 
 The MVC project is a server-rendered API client. It references
 `RaceDay.Contracts` for request/response types and contains no SQL Server,
@@ -127,6 +128,25 @@ EF Core, or API database context registration.
 | `POST /Account/Logout` | Antiforgery required | None; calls `POST /api/auth/logout` with the current API session cookie. | Redirects to login and expires `.RaceDay.Session` in the browser. |
 | `GET /Dashboard` | API session required | Calls `GET /api/users/me`. | Participant- or organiser-specific dashboard and navigation. A missing/expired session redirects to login. |
 | `GET /Profile` | API session required | Calls `GET /api/users/me`. | Safe profile details for the signed-in user. |
+| `GET /organiser` | Organiser API session required | Calls event list and each owned event's enrolment list. | Event, upcoming event and total enrolment summaries. |
+| `GET /organiser/events` | Organiser API session required | Calls `GET /api/events`. | Lists all events, with management links only for owned events. |
+| `GET /organiser/events/create` | Organiser API session required | Calls `GET /api/event-types`. | Event creation form and event type options. |
+| `POST /organiser/events/create` | Organiser API session required; antiforgery required | `OrganiserEventFormViewModel` (`EventName`, `Description`, `EventDate`, `Location`, `Distance`, `EventTypeId`); calls `POST /api/events` with `EventRequest`. | Creates event and redirects to its detail page; MVC and API validate fields. |
+| `GET /organiser/events/{id}` | Organiser API session required | Calls `GET /api/events/{id}`. | Event detail page; shows management actions only when the current organiser owns it. |
+| `GET /organiser/events/{id}/edit` | Organiser API session required and event ownership checked | Calls event detail and `GET /api/event-types`. | Populated edit form. |
+| `POST /organiser/events/{id}/edit` | Organiser API session required; antiforgery required; event ownership checked | Same event form fields; calls `PUT /api/events/{id}` with `EventRequest`. | Saves event and redirects to details. |
+| `GET /organiser/events/{eventId}/categories` | Organiser API session required and event ownership checked | Calls `GET /api/events/{eventId}/categories`. | Lists categories. |
+| `GET /organiser/events/{eventId}/categories/create` | Organiser API session required and event ownership checked | None | Category form. |
+| `POST /organiser/events/{eventId}/categories/create` | Organiser API session required; antiforgery required; event ownership checked | `OrganiserCategoryFormViewModel` (`CategoryName`, `Description`, `MinimumAge`, `MaximumAge`); calls `POST /api/events/{eventId}/categories` with `CategoryRequest`. | Creates category; age range and API errors displayed. |
+| `GET /organiser/events/{eventId}/categories/{categoryId}/edit` | Organiser API session required and category/event ownership checked | Uses event category list. | Populated category form. |
+| `POST /organiser/events/{eventId}/categories/{categoryId}/edit` | Organiser API session required; antiforgery required; ownership checked | Category form fields; calls `PUT /api/categories/{categoryId}`. | Updates category. |
+| `POST /organiser/events/{eventId}/categories/{categoryId}/delete` | Organiser API session required; antiforgery required; ownership checked | None; calls `DELETE /api/categories/{categoryId}`. | Deletes category or reports API conflict (for example, linked enrolments). |
+| `GET /organiser/events/{eventId}/enrolments` | Organiser API session required and event ownership checked | Calls event enrolment and category list endpoints. | Enrolment table with participant IDs, category names and status controls. Participant names are not supplied by the current API. |
+| `POST /organiser/events/{eventId}/enrolments/{enrolmentId}/status` | Organiser API session required; antiforgery required; enrolment/event association checked | `status` form field (`ACTIVE`, `CANCELLED`, `COMPLETED`); calls `PUT /api/enrolments/{id}/status` with `EnrolmentStatusRequest`. | Updates status and redirects to enrolments. |
+| `GET /organiser/events/{eventId}/results` | Organiser API session required and event ownership checked | Calls event enrolment/category lists then `GET /api/enrolments/{enrolmentId}/result` per enrolment. | Result table; missing results display as not recorded. |
+| `GET /organiser/events/{eventId}/results/{enrolmentId}/edit` | Organiser API session required; event/enrolment association checked | Calls `GET /api/enrolments/{id}` and result endpoint. | Result create/edit form. |
+| `POST /organiser/events/{eventId}/results/{enrolmentId}/edit` | Organiser API session required; antiforgery required; association checked | `OrganiserResultFormViewModel` (`FinishTime`, `FinishingPosition`); calls existing result `POST` if absent or `PUT` if present with `ResultRequest`. | Saves the result. API marks enrolment completed. |
+| `POST /organiser/events/{eventId}/results/{enrolmentId}/delete` | Organiser API session required; antiforgery required; association checked | None; calls `DELETE /api/enrolments/{id}/result`. | Removes result. |
 
 ### API client and cookies
 
@@ -143,11 +163,25 @@ EF Core, or API database context registration.
 - Session cookies stay HttpOnly and are not written to logs or made available
   to JavaScript. MVC unsafe form submissions use ASP.NET Core antiforgery
   validation.
+- On Windows Development runs, the API and MVC use separate persistent
+  key directories under `%LOCALAPPDATA%\RaceDay\Development\DataProtection`
+  (`Api` and `Mvc` subdirectories). Each ring is encrypted with DPAPI for the
+  current Windows user. Run both apps under that user between restarts. The
+  existing default ASP.NET Core key ring is preserved and is not used by these
+  Development configurations. Development logging uses Console and Debug;
+  Production provider and key configuration are unchanged.
+- The API's in-memory session store is cleared when the API process stops, so
+  browser API session cookies require a new login after an API restart. MVC
+  antiforgery keys persist; after the first Development key-ring change, load
+  a fresh form before submitting any form that was rendered with the previous
+  default key ring.
 - The MVC UI maps API 401 responses to an expired-session sign-in redirect,
   403 to an access-denied page, and connection/timeout failures to a
   service-unavailable page or form error.
 
-The initial MVC sprint includes login, logout, participant registration,
-profile retrieval and role-aware navigation. Event, category, enrolment, and
-results screens are not implemented in MVC yet; the API endpoints above remain
-available for later integration.
+The MVC implements organiser event, category, enrolment status and result
+management over the API. The API does not provide participant names in an
+organiser event enrolment list, so the UI displays participant IDs. It also has
+no aggregate organiser result endpoint; the MVC reads one result per enrolment.
+The API does not yet support banner or profile-image uploads, event deletion in
+the MVC, organiser participant-name lookup, or bulk result retrieval.

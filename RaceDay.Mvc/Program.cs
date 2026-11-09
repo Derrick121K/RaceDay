@@ -1,7 +1,31 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.DataProtection;
 using RaceDay.Mvc.Services;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Give MVC its own persistent Development key ring. DPAPI scopes the key
+// encryption to the current Windows user; production key configuration is
+// left to the deployment environment.
+if (builder.Environment.IsDevelopment())
+{
+    builder.Logging.ClearProviders();
+    builder.Logging.AddConsole();
+    builder.Logging.AddDebug();
+
+    var dataProtection = builder.Services.AddDataProtection()
+        .SetApplicationName("RaceDay.Mvc");
+
+    if (OperatingSystem.IsWindows())
+    {
+        var keyDirectory = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "RaceDay", "Development", "DataProtection", "Mvc");
+
+        dataProtection.PersistKeysToFileSystem(new DirectoryInfo(keyDirectory))
+            .ProtectKeysWithDpapi(protectToLocalMachine: false);
+    }
+}
 
 builder.Services.AddControllersWithViews(options =>
 {

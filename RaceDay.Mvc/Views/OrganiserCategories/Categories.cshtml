@@ -1,0 +1,6 @@
+@model OrganiserCategoriesViewModel
+@{ ViewData["Title"] = "Categories"; }
+<section class="content-heading"><p class="eyebrow">@Model.Event.EventName</p><h1>Categories</h1><p>Manage the age and race categories participants can select.</p></section>
+<div class="section-heading"><a asp-controller="Organiser" asp-action="EventDetails" asp-route-id="@Model.Event.EventID">← Event details</a><a class="button button-primary" asp-action="CreateCategory" asp-route-eventId="@Model.Event.EventID">Add category</a></div>
+@if (Model.Categories.Count == 0) { <div class="empty-state"><h2>No categories yet</h2><p>Add a category before participants enrol.</p></div> }
+else { <div class="management-list">@foreach (var category in Model.Categories) { <article class="management-card"><div><h2>@category.CategoryName</h2><p>@category.Description</p><p>Age range: @(category.MinimumAge?.ToString() ?? "Any") – @(category.MaximumAge?.ToString() ?? "Any")</p></div><div class="button-row compact"><a class="button button-secondary" asp-action="EditCategory" asp-route-eventId="@Model.Event.EventID" asp-route-categoryId="@category.CategoryID">Edit</a><form asp-action="DeleteCategory" asp-route-eventId="@Model.Event.EventID" asp-route-categoryId="@category.CategoryID" method="post"><button class="button button-danger" type="submit">Delete</button></form></div></article> }</div> }

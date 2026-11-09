@@ -164,11 +164,67 @@ public sealed class EventRequest
     [StringLength(200)]
     public string Location { get; set; } = string.Empty;
 
-    [Range(typeof(decimal), "0.01", "9999.99")]
+    [Range(0.01, 9999.99)]
     public decimal Distance { get; set; }
 
     [Range(1, int.MaxValue)]
     public int EventTypeId { get; set; }
+}
+
+/// <summary>
+/// Event type option returned by the public lookup endpoint.
+/// </summary>
+public sealed class EventTypeResponse
+{
+    public int EventTypeID { get; set; }
+    public string TypeName { get; set; } = string.Empty;
+    public string? Description { get; set; }
+}
+
+/// <summary>
+/// Event data returned by list, detail and mutation endpoints.
+/// Some mutation responses omit description and event type name.
+/// </summary>
+public sealed class EventResponse
+{
+    public int EventID { get; set; }
+    public string EventName { get; set; } = string.Empty;
+    public string? Description { get; set; }
+    public DateTime EventDate { get; set; }
+    public string Location { get; set; } = string.Empty;
+    public decimal Distance { get; set; }
+    public int EventTypeID { get; set; }
+    public string? EventTypeName { get; set; }
+    public int OrganiserID { get; set; }
+}
+
+public sealed class CategoryResponse
+{
+    public int CategoryID { get; set; }
+    public int EventID { get; set; }
+    public string CategoryName { get; set; } = string.Empty;
+    public string? Description { get; set; }
+    public int? MinimumAge { get; set; }
+    public int? MaximumAge { get; set; }
+}
+
+public sealed class EventEnrolmentResponse
+{
+    public int EnrolmentID { get; set; }
+    public int ParticipantID { get; set; }
+    public int EventID { get; set; }
+    public int CategoryID { get; set; }
+    public DateTime EnrolmentDate { get; set; }
+    public string Status { get; set; } = string.Empty;
+}
+
+public sealed class RaceResultResponse
+{
+    public int ResultID { get; set; }
+    public int EnrolmentID { get; set; }
+    public TimeSpan FinishTime { get; set; }
+    public int FinishingPosition { get; set; }
+    public DateTime RecordedAt { get; set; }
 }
 
 /// <summary>

@@ -1,0 +1,6 @@
+@model OrganiserEventsViewModel
+@{ ViewData["Title"] = "Manage events"; }
+<section class="content-heading"><p class="eyebrow">Organiser</p><h1>Events</h1><p>Events across RaceDay. You can edit events that you organise.</p></section>
+<div class="section-heading"><span>@Model.Events.Count event(s)</span><a class="button button-primary" asp-action="CreateEvent">Create event</a></div>
+@if (Model.Events.Count == 0) { <div class="empty-state"><h2>No events yet</h2><p>Create your first event to begin.</p></div> }
+else { <div class="table-wrap"><table><thead><tr><th>Event</th><th>Date</th><th>Location</th><th>Distance</th><th>Organiser</th><th></th></tr></thead><tbody>@foreach (var item in Model.Events) { <tr><td><strong>@item.EventName</strong><small>@(item.EventTypeName ?? "Race")</small></td><td>@item.EventDate.ToString("dd MMM yyyy")</td><td>@item.Location</td><td>@item.Distance km</td><td>@(item.OrganiserID == Model.OrganiserId ? "You" : $"Organiser #{item.OrganiserID}")</td><td><a asp-action="EventDetails" asp-route-id="@item.EventID">Details</a></td></tr> }</tbody></table></div> }

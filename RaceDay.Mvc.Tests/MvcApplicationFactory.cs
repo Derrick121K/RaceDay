@@ -18,10 +18,13 @@ public sealed class FakeApiState
 {
     public ConcurrentDictionary<string, UserProfileResponse> Sessions { get; } = new();
     public ConcurrentQueue<(string Path, string? Cookie)> Requests { get; } = new();
+    public ConcurrentQueue<(string Method, string Path)> ApiCalls { get; } = new();
     public ConcurrentQueue<string> RegistrationRoles { get; } = new();
+    public ConcurrentDictionary<string, HttpStatusCode> ApiStatusOverrides { get; } = new();
     public bool FailRequests { get; set; }
     public HttpStatusCode? ProfileStatusOverride { get; set; }
     public bool RevokeSessions { get; set; }
+    public bool ResultIsRecorded { get; set; }
 }
 
 public sealed class MvcApplicationFactory : WebApplicationFactory<Program>
@@ -72,6 +75,10 @@ internal sealed class FakeRaceDayApiHandler : HttpMessageHandler
             ? values.SingleOrDefault()
             : null;
         _state.Requests.Enqueue((path, cookie));
+        _state.ApiCalls.Enqueue((request.Method.Method, path));
+
+        if (_state.ApiStatusOverrides.TryGetValue(path, out var statusOverride))
+            return ErrorResponse(statusOverride);
 
         if (path.Equals("/api/auth/login", StringComparison.OrdinalIgnoreCase))
             return await LoginAsync(request, cancellationToken);
@@ -108,8 +115,86 @@ internal sealed class FakeRaceDayApiHandler : HttpMessageHandler
             };
         }
 
+        var currentProfile = GetProfile(cookie);
+        if (path == "/api/events" && request.Method == HttpMethod.Get)
+            return Json(new[] { SampleEvent(currentProfile?.UserId ?? 1) });
+        if (path.StartsWith("/api/events/", StringComparison.Ordinal) &&
+            path.EndsWith("/categories", StringComparison.Ordinal) && request.Method == HttpMethod.Get)
+            return Json(new[] { SampleCategory() });
+        if (path == "/api/event-types" && request.Method == HttpMethod.Get)
+            return Json(new[] { new EventTypeResponse { EventTypeID = 1, TypeName = "Road" } });
+        if (path.StartsWith("/api/events/", StringComparison.Ordinal) &&
+            path.EndsWith("/enrolments", StringComparison.Ordinal) && request.Method == HttpMethod.Get)
+            return Json(new[] { SampleEnrolment() });
+        if (path.StartsWith("/api/enrolments/", StringComparison.Ordinal) &&
+            path.EndsWith("/result", StringComparison.Ordinal) && request.Method == HttpMethod.Get)
+            return _state.ResultIsRecorded
+                ? Json(new RaceResultResponse { ResultID = 5, EnrolmentID = 7, FinishTime = TimeSpan.FromHours(1), FinishingPosition = 1 })
+                : ErrorResponse(HttpStatusCode.NotFound);
+        if (path.StartsWith("/api/enrolments/", StringComparison.Ordinal) &&
+            path.EndsWith("/result", StringComparison.Ordinal) && request.Method == HttpMethod.Post)
+        {
+            _state.ResultIsRecorded = true;
+            return Json(new RaceResultResponse { ResultID = 5, EnrolmentID = 7, FinishTime = TimeSpan.FromHours(1), FinishingPosition = 1 }, HttpStatusCode.Created);
+        }
+        if (path.StartsWith("/api/enrolments/", StringComparison.Ordinal) && path.EndsWith("/result", StringComparison.Ordinal) && request.Method == HttpMethod.Put)
+            return Json(new RaceResultResponse { ResultID = 5, EnrolmentID = 7, FinishTime = TimeSpan.FromHours(1), FinishingPosition = 1 });
+        if (path.StartsWith("/api/enrolments/", StringComparison.Ordinal) && path.EndsWith("/result", StringComparison.Ordinal) && request.Method == HttpMethod.Delete)
+        {
+            _state.ResultIsRecorded = false;
+            return new HttpResponseMessage(HttpStatusCode.NoContent);
+        }
+        if (path.StartsWith("/api/enrolments/", StringComparison.Ordinal) && path.EndsWith("/status", StringComparison.Ordinal))
+            return new HttpResponseMessage(HttpStatusCode.OK);
+        if (path.StartsWith("/api/enrolments/", StringComparison.Ordinal) && request.Method == HttpMethod.Get)
+            return Json(new EnrolmentDetailResponse { EnrolmentId = 7, ParticipantId = 9, EventId = 1, EventName = "Test race", CategoryId = 2, CategoryName = "Open", Status = "ACTIVE" });
+        if (path.StartsWith("/api/events/", StringComparison.Ordinal) && path.EndsWith("/categories", StringComparison.Ordinal) && request.Method == HttpMethod.Post)
+            return Json(new CategoryResponse { CategoryID = 2, EventID = 1, CategoryName = "Open" }, HttpStatusCode.Created);
+        if (path.StartsWith("/api/categories/", StringComparison.Ordinal) && request.Method == HttpMethod.Put)
+            return Json(SampleCategory());
+        if (path.StartsWith("/api/categories/", StringComparison.Ordinal) && request.Method == HttpMethod.Delete)
+            return new HttpResponseMessage(HttpStatusCode.NoContent);
+        if (path == "/api/events" && request.Method == HttpMethod.Post)
+            return Json(SampleEvent(currentProfile?.UserId ?? 1), HttpStatusCode.Created);
+        if (path.StartsWith("/api/events/", StringComparison.Ordinal) && request.Method == HttpMethod.Put)
+            return Json(SampleEvent(currentProfile?.UserId ?? 1));
+        if (path.StartsWith("/api/events/", StringComparison.Ordinal) && request.Method == HttpMethod.Get)
+        {
+            var eventId = int.TryParse(path.Split('/').Last(), out var parsedId) ? parsedId : 1;
+            return Json(SampleEvent(eventId == 99 ? -123 : currentProfile?.UserId ?? 1));
+        }
+
         return ErrorResponse(HttpStatusCode.NotFound);
     }
+
+    private UserProfileResponse? GetProfile(string? cookie)
+    {
+        if (cookie is null || !cookie.StartsWith(".RaceDay.Session=", StringComparison.Ordinal)) return null;
+        var sessionId = cookie[".RaceDay.Session=".Length..];
+        return _state.Sessions.TryGetValue(sessionId, out var profile) ? profile : null;
+    }
+
+    private static EventResponse SampleEvent(int organiserId) => new()
+    {
+        EventID = 1, EventName = "Test race", Description = "A test event", EventDate = new DateTime(2027, 5, 1),
+        Location = "Cape Town", Distance = 10, EventTypeID = 1, EventTypeName = "Road", OrganiserID = organiserId
+    };
+
+    private static CategoryResponse SampleCategory() => new()
+    {
+        CategoryID = 2, EventID = 1, CategoryName = "Open", Description = "Open category", MinimumAge = 18
+    };
+
+    private static EventEnrolmentResponse SampleEnrolment() => new()
+    {
+        EnrolmentID = 7, ParticipantID = 9, EventID = 1, CategoryID = 2,
+        EnrolmentDate = new DateTime(2026, 4, 1), Status = "ACTIVE"
+    };
+
+    private static HttpResponseMessage Json<T>(T value, HttpStatusCode status = HttpStatusCode.OK) => new(status)
+    {
+        Content = JsonContent.Create(value)
+    };
 
     private async Task<HttpResponseMessage> LoginAsync(
         HttpRequestMessage request,

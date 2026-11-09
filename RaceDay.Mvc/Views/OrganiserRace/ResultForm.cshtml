@@ -1,0 +1,5 @@
+@model OrganiserResultFormViewModel
+@{ ViewData["Title"] = Model.HasResult ? "Edit result" : "Record result"; }
+<section class="form-page"><div class="form-intro"><p class="eyebrow">@Model.EventName · Participant #@Model.ParticipantId</p><h1>@ViewData["Title"]</h1><p>Enter the recorded finish time and finishing position. Saving a result completes the enrolment in the API.</p></div><form class="form-card" asp-action="EditResult" asp-route-eventId="@Model.EventId" asp-route-enrolmentId="@Model.EnrolmentId" method="post"><div asp-validation-summary="ModelOnly" class="validation-summary"></div>
+<label asp-for="FinishTime">Finish time (HH:mm:ss)</label><input asp-for="FinishTime" placeholder="01:24:35" /><span asp-validation-for="FinishTime" class="field-error"></span>
+<label asp-for="FinishingPosition">Finishing position</label><input asp-for="FinishingPosition" type="number" min="1" /><span asp-validation-for="FinishingPosition" class="field-error"></span><button class="button button-primary button-wide" type="submit">Save result</button><a asp-action="Results" asp-route-eventId="@Model.EventId">Cancel</a></form></section>
